@@ -19,7 +19,7 @@ let s:file_list = [
 \ findfile('.dotFiles/_vimrc', fnamemodify($MYVIMRC, ':p:h')), ]
 :for filename in s:file_list
   :if filereadable(filename)
-    :source filename
+    :execute 'source '.filename
     :break
   :endif
 :endfor
@@ -36,3 +36,22 @@ Include the lines
                        (message (concat "Loading " x ))
                        (throw 'exitLoop nil) ) ) ) )
 ```
+
+## .profile  (Bash)
+Include the lines
+```sh
+#
+# Add to .profile:
+FILE=~/.dotFiles/_profile; [ -f $FILE ] && source $FILE
+#
+```
+
+## .zprofile  (Zsh)
+Include the lines
+```sh
+#
+# Add to .zprofile:
+FILE=~/.dotFiles/_zprofile; [ -f $FILE ] && source $FILE
+#
+```
+
