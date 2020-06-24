@@ -18,13 +18,24 @@ if [ -n "`$SHELL -c 'echo $ZSH_VERSION'`" ]; then
     plugins=( zsh-completions)
     autoload -U compinit && compinit
     autoload -U colors && colors
-    #autoload -Uz compinit && compinit
+
     # case insensitive path-completion
     zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*'
 
     # partial completion suggestions
     zstyle ':completion:*' list-suffixes
     zstyle ':completion:*' expand prefix suffix
+
+    # history search uses line (https://www.arp242.net/zshrc.html)
+    autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+
+    zle -N up-line-or-beginning-search
+    zle -N down-line-or-beginning-search
+
+    bindkey '^[[A'  up-line-or-beginning-search    # Arrow up
+    bindkey '^[OA'  up-line-or-beginning-search
+    bindkey '^[[B'  down-line-or-beginning-search  # Arrow down
+    bindkey '^[OB'  down-line-or-beginning-search
 
     # https://superuser.com/questions/49092/how-to-format-the-path-in-a-zsh-prompt
     setopt PROMPT_SUBST
