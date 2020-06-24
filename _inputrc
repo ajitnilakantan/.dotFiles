@@ -1,0 +1,6 @@
+ # Bash customizations
+ set completion-ignore-case on
+ set enable-keypad on
+ set show-all-if-ambiguous on
+ set visible-stats on
+ TAB: menu-complete

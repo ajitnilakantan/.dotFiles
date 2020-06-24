@@ -1,0 +1,34 @@
+#
+# Add to .zprofile:
+#  FILE=~/.dotFiles/_zprofile; [ -f $FILE ] && source $FILE
+# 
+
+# Loaded on login
+function source_bash {
+  emulate -L bash
+  builtin source "$@"
+}
+FILE=~/.dotFiles/_profile; [ -f $FILE ] && source_bash $FILE
+
+
+# ZSH
+if [ -n "`$SHELL -c 'echo $ZSH_VERSION'`" ]; then
+    # assume Zsh
+    # rm -f ~/.zcompdump
+    plugins=( zsh-completions)
+    autoload -U compinit && compinit
+    autoload -U colors && colors
+    #autoload -Uz compinit && compinit
+    # case insensitive path-completion
+    zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*'
+
+    # partial completion suggestions
+    zstyle ':completion:*' list-suffixes
+    zstyle ':completion:*' expand prefix suffix
+
+    # https://superuser.com/questions/49092/how-to-format-the-path-in-a-zsh-prompt
+    setopt PROMPT_SUBST
+    PROMPT='%n%f@%F{yellow}%m%f %B%~%b %# '
+fi
+
+
