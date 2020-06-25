@@ -42,7 +42,7 @@ Include the lines
 ```sh
 #
 # Add to .profile:
-FILE=~/.dotFiles/_profile; [ -f $FILE ] && source $FILE
+(FILE=~/.dotFiles/_profile; [ -f $FILE ] && source $FILE)
 #
 ```
 
@@ -51,7 +51,7 @@ Include the lines
 ```sh
 #
 # Add to .zprofile:
-FILE=~/.dotFiles/_zprofile; [ -f $FILE ] && source $FILE
+(FILE=~/.dotFiles/_zprofile; [ -f $FILE ] && source $FILE)
 #
 ```
 
