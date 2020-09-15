@@ -1,16 +1,17 @@
 ;(catch 'exitLoop
-;    (setq my-list '("c:/Apps/dotFiles/emacs.local/my-site-start"))
+;    (setq my-list (list (substitute-in-file-name "~/.dotFiles/emacs/my-site-start")
+;                        (substitute-in-file-name "$HOME/.dotFiles/emacs/my-site-start")
+;                        (substitute-in-file-name "$USERPROFILE/.dotFiles/emacs/my-site-start")) )
 ;    (dolist (x my-list)
 ;        (if (file-exists-p (concat x ".el"))
 ;                (progn (load x)
 ;                       (message (concat "Loading " x ))
 ;                       (throw 'exitLoop nil) ) ) ) )
-; (if (file-exists-p "c:/Apps/dotFiles/emacs.local/my-site-start.el") (load "c:/Apps/dotFiles/emacs.local/my-site-start"))
-
 
 (message "Loading site-start.el...")
 (setq inhibit-compacting-font-caches t)
 ;;(byte-recompile-directory (file-name-directory load-file-name) 0)
+
 ;; Timestamp message buffer
 (defun sh/current-time-microseconds ()
   (let* ((nowtime (current-time))
@@ -34,20 +35,9 @@
 
 ;; load emacs 24's package system. Add MELPA repository.
 (require 'package)
-(add-to-list
-    'package-archives
-    '("melpa" . "http://stable.melpa.org/packages/") ; many packages won't show if using stable
-    ; '("melpa" . "http://melpa.milkbox.net/packages/")
-    t)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
-; (package-refresh-contents)
-; To update web-mode, run M-x list-packages. Emacs will fetch the list of packages available for install, and present that list in a buffer.
-; You can then go in that buffer to web-mode, press i to mark that package for installation, then press  x to execute the instructions, and install web-mode.
-
-
-;; Common list extensions
-(require 'cl)
-(message "Loaded cl")
+;(package-refresh-contents)
 
 ;; Set up tabs
 ; tab-width is used when displaying tabs
@@ -85,22 +75,6 @@
 ;; When you scroll down with the cursor, emacs will move down the buffer one 
 ;; line at a time, instead of in larger amounts.
 (setq scroll-step 1)
-
-;; This turns off the GUI menus in X.  You can toggle this at any point with
-;; M-x menu-bar-mode.  If you're new to emacs, you might want to disable this.
-;; (Or would that be reenable it?)  In my case, though, an extra line of 
-;; emacs real estate never hurts. :) 
-(require 'server)
-
-(if (not window-system)   (menu-bar-mode 0) 
-  (progn 
-    (require 'server)
-    (defun server-ensure-safe-dir (dir) "Noop" t)
-    ;;; (server-start)
-  )
-)
-(or (server-running-p) (server-start))
-
 
 ;; Makes things a little bit more consistent.
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -160,22 +134,6 @@
 
 ;; Start with new default.
 (setq mode-line-format default-mode-line-format)
-
-(defvar my-mode-line-coding-format
-    '(:eval
-      (let* ((code (symbol-name buffer-file-coding-system))
-             (eol-type (coding-system-eol-type buffer-file-coding-system))
-             (eol (if (eq 0 eol-type) "UNIX"
-                      (if (eq 1 eol-type) "DOS"
-                          (if (eq 2 eol-type) "MAC"
-                              "???")))))
-          (concat code " " eol " "))))
-(put 'my-mode-line-coding-format 'risky-local-variable t)
-(setq-default mode-line-format (substitute
-                                'my-mode-line-coding-format
-                                'mode-line-mule-info
-                                mode-line-format))
-
 (message "Set modeline")
 
 ;; Allow SPC to complete filenames like version 21
@@ -211,9 +169,51 @@
                  (template-args-cont . +))))
 (setq c-default-style "microsoft")
 
+(defun smarter-move-beginning-of-line (arg)
+  "Move point back to indentation of beginning of line.
+
+Move point to the first non-whitespace character on this line.
+If point is already there, move to the beginning of the line.
+Effectively toggle between the first non-whitespace character and
+the beginning of the line.
+
+If ARG is not nil or 1, move forward ARG - 1 lines first.  If
+point reaches the beginning or end of the buffer, stop there."
+  (interactive "^p")
+  (setq arg (or arg 1))
+
+  ;; Move lines first
+  (when (/= arg 1)
+    (let ((line-move-visual nil))
+      (forward-line (1- arg))))
+
+  (let ((orig-point (point)))
+    (back-to-indentation)
+    (when (= orig-point (point))
+      (move-beginning-of-line 1))))
+
+;; remap C-a to `smarter-move-beginning-of-line'
+(global-set-key [remap move-beginning-of-line] 'smarter-move-beginning-of-line)
+
+;; Paredit: https://www.emacswiki.org/emacs/ParEdit
+(autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of Lisp code." t)
+(add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
+(add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
+(add-hook 'ielm-mode-hook             #'enable-paredit-mode)
+(add-hook 'lisp-mode-hook             #'enable-paredit-mode)
+(add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
+(add-hook 'scheme-mode-hook           #'enable-paredit-mode)
+
+
+;; Orgmode
+(require 'org)
+(define-key global-map "\C-cl" 'org-store-link)
+(define-key global-map "\C-ca" 'org-agenda)
+(setq org-log-done t)
+
 ;; for html
 ;;;(load-file (expand-file-name "web-mode.el" (file-name-directory load-file-name)))
-; (package-install 'web-mode)
+(package-install 'web-mode)
 (require 'web-mode)
 
 (setq web-mode-enable-auto-pairing t)
@@ -316,7 +316,7 @@
 ;; Filename completion
 (require 'completion)
 
-
+;; Auto completion
 (dynamic-completion-mode)
  ;; Allow tab to autocomplete
  (setq-default dabbrev-case-fold-search t)
@@ -341,7 +341,6 @@
  (add-hook 'emacs-lisp-mode-hook 'my-tab-fix)
  (add-hook 'web-mode-hook        'my-tab-fix)
 
- ; (add-to-list 'load-path (concat (file-name-directory load-file-name) "csharp/"))
 
 ;; Function to jump to the matching parenthesis. Bound to ESC Control-f
 (defun match-paren (arg)
@@ -366,7 +365,7 @@
 (define-key minibuffer-local-filename-completion-map " " 'minibuffer-complete-word)
 (define-key minibuffer-local-must-match-filename-map " " 'minibuffer-complete-word)
 
-;; Cursror
+;; Cursor
 (defvar hcz-set-cursor-type-type t)
 (defvar hcz-set-cursor-type-buffer t)
 (defun hcz-set-cursor-type-according-to-mode ()

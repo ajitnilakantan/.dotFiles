@@ -1,0 +1,25 @@
+Windows
+
+Winget: https://www.microsoft.com/en-ca/p/app-installer/9nblggh4nns1?ocid=9nblggh4nns1_ORSEARCH_Bing&rtc=2&activetab=pivot:overviewtab
+
+Windows File Recovery: https://www.microsoft.com/en-ca/p/windows-file-recovery/9n26s50ln705?activetab=pivot:overviewtab
+
+
+choco install --exact --verbose --ignore-dependencies -y gnuwin32-coreutils.install
+choco install --exact --verbose --ignore-dependencies -y Less
+choco install --exact --verbose --ignore-dependencies -y IrfanView
+choco install --exact --verbose --ignore-dependencies -y irfanviewplugins
+choco install --exact --verbose --ignore-dependencies -y Ghostscript
+choco install --exact --verbose --ignore-dependencies -y paint.net
+choco install --exact --verbose --ignore-dependencies -y 7zip
+choco install --exact --verbose --ignore-dependencies -y fd
+choco install --exact --verbose --ignore-dependencies -y fzf
+choco install --exact --verbose --ignore-dependencies -y ripgrep
+choco install --exact --verbose --ignore-dependencies -y ripgrep-all
+choco install --exact --verbose --ignore-dependencies -y poppler # pdftotext
+choco install --exact --verbose --ignore-dependencies -y pandoc
+sudo winget install -e --id Git.Git 
+winget install -e --name Node.js
+winget install -e --id Spotify.Spotify
+winget install -e --id vim.vim
+winget install -e --id GNU.emacs

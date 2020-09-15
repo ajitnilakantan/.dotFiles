@@ -1,3 +1,4 @@
+source $VIMRUNTIME/defaults.vim
 " Store backup, undo, and swap files in temp directory
 if has("win32")
   "Windows options here
@@ -134,21 +135,16 @@ set wildmode=longest:list,full
 set whichwrap=b
 
 " colorscheme
-" :so $VIMRUNTIME/syntax/hitest.vim  
-""" colorscheme blue
-""" hi SpecialKey ctermfg=Yellow
-""" hi Error ctermbg=Blue
-""" hi Ignore ctermfg=Grey
+set termguicolors
+colorscheme darkblue
 
-" see https://stackoverflow.com/questions/4976776/how-to-get-path-to-the-current-vimscript-being-executed
 let s:mypath = fnamemodify(resolve(expand('<sfile>:p')), ':h')
-:execute 'source '.s:mypath.'/vim/color/blue.vim'
-highlight Cursor guifg=white guibg=black
-highlight iCursor guifg=white guibg=steelblue
-set guicursor=n-v-c:block-Cursor
-set guicursor+=i:ver100-iCursor
-set guicursor+=n-v-c:blinkon0
-set guicursor+=i:blinkwait0
+:execute 'source '.s:mypath.'/vim/autoload/plug.vim'
+""" Run :PlugInstall 
+call plug#begin(expand('~/.vim/plugged'))
+Plug 'arcticicestudio/nord-vim'
+call plug#end()
+"colorscheme nord
 
 
 
@@ -167,7 +163,21 @@ endfunction
 inoremap <expr> <tab> InsertTabWrapper()
 inoremap <s-tab> <c-n>
 
-"source /Apps/dotFiles/.vimrc.new
-" let s:myfile = findfile('.vimrc.new', s:mycurpath)
-" source s:myfile
+" Grep: https://thoughtbot.com/blog/faster-grepping-in-vim
+if executable('rg')
+  " Use rg over grep
+  set grepprg=rg\ --vimgrep\ --no-heading\ --smart-case
+endif
+" bind K to grep word under cursor
+nnoremap K :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
 
+" Tabs: https://vim.fandom.com/wiki/Open_every_buffer_in_its_own_tabpage
+nnoremap <C-Left> :tabprevious<CR>
+nnoremap <C-Right> :tabnext<CR>
+
+" Rainbow parentheses
+""" Run :PlugInstall 
+call plug#begin(expand('~/.vim/plugged'))
+Plug 'luochen1990/rainbow'
+call plug#end()
+let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
