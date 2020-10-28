@@ -141,9 +141,9 @@ colorscheme darkblue
 let s:mypath = fnamemodify(resolve(expand('<sfile>:p')), ':h')
 :execute 'source '.s:mypath.'/vim/autoload/plug.vim'
 """ Run :PlugInstall 
-call plug#begin(expand('~/.vim/plugged'))
-Plug 'arcticicestudio/nord-vim'
-call plug#end()
+" call plug#begin(expand('~/.vim/plugged'))
+" Plug 'arcticicestudio/nord-vim'
+" call plug#end()
 "colorscheme nord
 
 
@@ -181,3 +181,9 @@ call plug#begin(expand('~/.vim/plugged'))
 Plug 'luochen1990/rainbow'
 call plug#end()
 let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
+
+" coc.nvim:  https://github.com/neoclide/coc.nvim
+"call plug#begin(expand('~/.vim/plugged'))
+"Plug 'neoclide/coc.nvim', {'branch': 'release'}
+"call plug#end()
+":execute 'source '.s:mypath.'/vim/coc/coc.vim'
