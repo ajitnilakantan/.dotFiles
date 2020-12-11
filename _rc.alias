@@ -1,0 +1,27 @@
+# Only in interactive shells
+
+function cls() { clear; }
+alias dev='cd ~/dev'
+function dir() { ls $*; }
+function del() { rm -i $*; }
+function move() { mv -i $*; }
+function mov() { mv -i $*; }
+function ren() { mv -i $*; }
+alias ls='ls -FG'
+function pd () { pushd "$1"; }
+function po () { popd  "$1"; }
+function md () { mkdir  "$1"; }
+function rd () { rmdir  "$1"; }
+function ff () { 2>/dev/null find -x . -name "$1" -print; }
+
+function w () { if [[ $* =~ [.] ]]; then w=$*; else w=$*.com; fi; echo $w; whois $w | egrep "Expir"; }
+
+function gitdiff() { git fetch origin ; git diff --name-only master origin/master; git diff @ '@{upstream}'; }
+function camera_usage() { lsof | egrep -i 'AppleCamera|iSight|VDC' }
+
+
+# Environment variables for interactive use only
+export CLICOLOR=1
+export LESS='eFRX -i -G -M -X -s'
+export LSCOLORS=GxfxcxdxbxGgGdabagacad
+

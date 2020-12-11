@@ -1,0 +1,32 @@
+## Interactive shell.  Soouced after zprofile
+
+# assume Zsh
+# rm -f ~/.zcompdump
+plugins=( zsh-completions)
+autoload -U compinit && compinit
+autoload -U colors && colors
+
+# case insensitive path-completion
+zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]}' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*'
+
+# partial completion suggestions
+zstyle ':completion:*' list-suffixes
+zstyle ':completion:*' expand prefix suffix
+
+# history search uses line (https://www.arp242.net/zshrc.html)
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+
+bindkey '^P'   up-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search # Up
+bindkey '^N'   down-line-or-beginning-search
+bindkey '^[[B' down-line-or-beginning-search # Down
+
+# https://superuser.com/questions/49092/how-to-format-the-path-in-a-zsh-prompt
+setopt PROMPT_SUBST
+PROMPT='%n%f@%F{yellow}%m%f %B%~%b %# '
+PROMPT='%n%f@%F{yellow}%m%f %B%~%b %(?..%F{red})%#%f '
+
+# Load interactive aliases and functions
+FILE=~/.dotFiles/_rc.alias; [ -f $FILE ] && source $FILE; unset FILE
