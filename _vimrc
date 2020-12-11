@@ -126,13 +126,17 @@ set iskeyword-=-                    " '-' is an end of word designator
 
 :autocmd FileType text setlocal nocindent noautoindent nospell
 
+" Remember position of last edit and return on reopen
+if has("autocmd")
+  au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+endif
 
 " == GUI
 if has('gui_running')
     set guioptions-=T           " Remove the toolbar
     set lines=40                " 40 lines of text instead of 24
 else
-    if &term == 'xterm' || &term == 'screen'
+    if &term == 'xterm' || &term == 'screen' || &term == 'xterm-256color'
         set t_Co=256            " Enable 256 colors to stop the CSApprox warning and make xterm vim shine
     else
         set termguicolors
@@ -148,7 +152,13 @@ set background=dark
 " call plug#end() " Run :PlugInstall to install
 " colorscheme nord
 
-colorscheme darkblue
+if &term == 'xterm-256color'
+    " More pleasant color scheme when you ssh to macos from windows
+    " :execute 'source '.s:mypath.'/vim/colors/atom.vim'
+    colorscheme slate
+else
+    colorscheme darkblue
+endif
 
 hi User1 guifg=#ffdad8  guibg=#880c0e
 hi User2 guifg=#000000  guibg=#F4905C
