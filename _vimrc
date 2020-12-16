@@ -1,4 +1,3 @@
-set nocompatible
 source $VIMRUNTIME/defaults.vim
 
 " == Store backup, undo, and swap files in temp directory
@@ -46,14 +45,18 @@ function! s:mycapture(excmd) abort
   endtry
   return out
 endfunction
-let s:mycurpath = fnamemodify(strpart(split(s:mycapture('scriptnames'), "\n")[-1], 5), ':p:h')
-" :echom s:mycurpath
-" let s:myfile = findfile('.vimrc.new', s:mycurpath)
-" :echom s:myfile
+let s:mypath = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+
+"
+" == Add vim support folder
+"
+:execute 'set runtimepath+='.s:mypath.'/vim/'
+
+" Check if coming from ssh
+let g:remoteSession = ($STY == "")
 
 " == Plug Plugin
-let s:mypath = fnamemodify(resolve(expand('<sfile>:p')), ':h')
-:execute 'source '.s:mypath.'/vim/autoload/plug.vim'
+" :execute 'source '.s:mypath.'/vim/autoload/plug.vim'
 
 " == Default font
 if has("gui_running")
@@ -147,15 +150,16 @@ endif
 " == colorscheme
 set background=dark
 
-" call plug#begin(expand('~/.vim/plugged'))
-" Plug 'arcticicestudio/nord-vim'
-" call plug#end() " Run :PlugInstall to install
-" colorscheme nord
-
 if &term == 'xterm-256color'
     " More pleasant color scheme when you ssh to macos from windows
-    " :execute 'source '.s:mypath.'/vim/colors/atom.vim'
-    colorscheme slate
+    " call plug#begin(expand('~/.vim/plugged'))
+    " Plug 'lifepillar/vim-solarized8'
+    " call plug#end() " Run :PlugInstall to install
+    if g:remoteSession
+        colorscheme slate
+    else
+        colorscheme solarized8
+    endif
 else
     colorscheme darkblue
 endif
@@ -196,9 +200,12 @@ endif
 
 " == Misc shortcuts
 " Shift-Tab to Outdent
-nnoremap <S-Tab> <<                    " for command mode
-inoremap <S-Tab> <C-d>                 " for insert mode
-nnoremap ;gg           G$g<C-G>''      " Show character count
+" for command mode
+nnoremap <S-Tab> <<
+" for insert mode
+inoremap <S-Tab> <C-d>
+" Show character count g-<C-G>
+nnoremap ;gg           G$g<C-G>''
 
 " Clear search highlight
 " This unsets the "last search pattern" register by hitting return. Keep
