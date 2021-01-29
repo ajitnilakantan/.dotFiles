@@ -1,4 +1,4 @@
-## Interactive shell.  Soouced after zprofile
+## Interactive shell.  Sourced after zprofile
 
 # assume Zsh
 # rm -f ~/.zcompdump
@@ -20,8 +20,16 @@ zle -N down-line-or-beginning-search
 
 bindkey '^P'   up-line-or-beginning-search
 bindkey '^[[A' up-line-or-beginning-search # Up
+bindkey '[1;5A' up-line-or-beginning-search # Control up
+bindkey '[1;2A' up-line-or-beginning-search # Shift up
 bindkey '^N'   down-line-or-beginning-search
 bindkey '^[[B' down-line-or-beginning-search # Down
+bindkey '[1;5B' down-line-or-beginning-search # Control down
+bindkey '[1;2B' down-line-or-beginning-search # Shift down
+bindkey '^[[1;5C' emacs-forward-word # Control right
+bindkey '^[[1;5D' emacs-backward-word # Control left
+bindkey '[1;2C' forward-char # Shift right
+bindkey '[1;2D' backward-char # Shift left
 
 # https://superuser.com/questions/49092/how-to-format-the-path-in-a-zsh-prompt
 setopt PROMPT_SUBST
