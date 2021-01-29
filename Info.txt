@@ -4,8 +4,11 @@ Winget: https://www.microsoft.com/en-ca/p/app-installer/9nblggh4nns1?ocid=9nblgg
 
 Windows File Recovery: https://www.microsoft.com/en-ca/p/windows-file-recovery/9n26s50ln705?activetab=pivot:overviewtab
 
+choco upgrade all -y  --verbose --ignore-dependencies
 
 choco install --exact --verbose --ignore-dependencies -y gnuwin32-coreutils.install
+
+choco install --exact --verbose --ignore-dependencies -y gsudo
 
 choco install --exact --verbose --ignore-dependencies -y IrfanView
 choco install --exact --verbose --ignore-dependencies -y irfanviewplugins
@@ -29,9 +32,32 @@ choco install --exact --verbose --ignore-dependencies -y exiftool
 choco install --exact --verbose --ignore-dependencies -y lame
 
 choco install --exact --verbose --ignore-dependencies -y git
+choco install --exact --verbose --ignore-dependencies -y vim
+choco install --exact --verbose --ignore-dependencies -y emacs
 
-#sudo winget install -e --id Git.Git 
+choco install --exact --verbose --ignore-dependencies -y docker-desktop
+choco install --exact --verbose --ignore-dependencies -y dupeguru
+choco install --exact --verbose --ignore-dependencies -y HxD
+
+# choco install --exact --verbose --ignore-dependencies -y anaconda3
+choco install --exact --verbose --ignore-dependencies -y python3
+choco install --exact --verbose --ignore-dependencies -y rust
+choco install --exact --verbose --ignore-dependencies -y rustup.install
+
+choco install --exact --verbose --ignore-dependencies -y golang
+
+# sudo required
+python -m pip install ipython
+python -m pip install flake8
+python -m pip install autopep8
+python -m pip install black
+python -m pip install numpy
+python -m pip install pyreadline  # tab completion in python repl shell
+python -m pip install jupyterlab  # Run as jupiter-lab
+python -m pip install scipy       # convolutions etc. with numpy
+python -m pip install z3-solver   # SMT solver
+
+rustup component add rustfmt
+cargo install fstrings
+
 #winget install -e --name Node.js
-winget install -e --id Spotify.Spotify
-#winget install -e --id vim.vim
-#winget install -e --id GNU.emacs

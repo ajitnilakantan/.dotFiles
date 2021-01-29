@@ -252,7 +252,7 @@ nnoremap <C-Left>  :tabprevious<CR>
 nnoremap <C-Right> :tabnext<CR>
 
 " == Rainbow parentheses
-""" Run :PlugInstall 
+""" Run :PlugInstall
 call plug#begin(expand('~/.vim/plugged'))
 Plug 'luochen1990/rainbow'
 call plug#end()
