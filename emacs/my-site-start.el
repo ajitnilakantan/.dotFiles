@@ -1,29 +1,33 @@
-  ; (byte-recompile-directory (file-name-directory load-file-name) 0)
+; (byte-recompile-directory (file-name-directory load-file-name) 0)
 ;; Timestamp message buffer
 (defun sh/current-time-microseconds ()
   (let* ((nowtime (current-time))
          (now-ms (nth 2 nowtime)))
     (concat (format-time-string "[%Y-%m-%dT%T" nowtime) (format ".%d] " now-ms))))
 
+(defvar curtime (current-time))
 (defadvice message (before sh/advice-timestamp-messages activate compile)
   (if (not (string-equal (ad-get-arg 0) "%s%s"))
-      (let ((deactivate-mark nil))
+      (let ((deactivate-mark nil) (newtime nil))
         (with-current-buffer "*Messages*"
           (read-only-mode 0)
           (goto-char (point-max))
           (if (not (bolp))
               (newline))
+          (setq newtime (current-time))
+          (insert (concat "[" (number-to-string (float-time (time-subtract newtime curtime))) "] "))
+          (setq curtime newtime)
           (insert (sh/current-time-microseconds))))))
 
 (message (concat "Loading " (file-name-directory load-file-name) " ... "))
-
-;; .emacs.d/init.el: https://realpython.com/emacs-the-best-python-editor
 
 ;; ===================================
 ;; MELPA Package Support
 ;; ===================================
 ;; Enables basic packaging support
+(message "Begin package")
 (require 'package)
+(message "Loaded package")
 
 ;; path to custom libraries as well as the libraries themselves
 (add-to-list 'load-path (file-name-directory load-file-name))
@@ -32,17 +36,22 @@
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
 
 ;; Initializes the package infrastructure
+(setq gc-cons-threshold 64000000)
+(add-hook 'after-init-hook #'(lambda () (setq gc-cons-threshold 800000))) ; restore after startup
 (package-initialize)
 
 ;; If there are no archived package contents, refresh them
 (when (not package-archive-contents) (package-refresh-contents))
+(message "Done package-refresh-contents")
 
 ;; Installs packages
 ;;
 ;; myPackages contains a list of package names
 (defvar myPackages
-  '(better-defaults                 ;; Set up some better Emacs defaults
-    elpy                            ;; Emacs Lisp Python Environment
+  '(use-package                     ;; Package management
+    better-defaults                 ;; Set up some better Emacs defaults
+    anaconda-mode                   ;; Emacs Lisp Python Environment
+    company                         ;; Completion
     flycheck                        ;; On the fly syntax checking
     ; py-autopep8                   ;; Run autopep8 on save
     blacken                         ;; Black formatting on save
@@ -59,61 +68,147 @@
 
 ;; Scans the list in myPackages
 ;; If the package listed is not already installed, install it
+(message "Begin package-install")
 (mapc #'(lambda (package)
           (unless (package-installed-p package)
             (package-install package)))
       myPackages)
 
+(message "Done package-install")
 
 
 ;; ====================================
 ;; Development Setup
 ;; ====================================
-;; == Enable elpy
-(elpy-enable)
+;; == Enable anaconda
+(message "Begin company")
+(use-package company
+ :ensure t
+ :defer t
+ :config
+ (setq company-idle-delay 0
+       company-minimum-prefix-length 2
+       company-show-numbers t
+       company-tooltip-limit 10
+       company-tooltip-align-annotations t
+       ;; invert the navigation direction if the the completion popup-isearch-match
+       ;; is displayed on top (happens near the bottom of windows)
+       company-tooltip-flip-when-above t)
+ (global-company-mode t)
+ )
+(message "Done company")
+
+(message "Begin anaconda-mode")
+(use-package anaconda-mode
+  :ensure t
+  :defer t
+  :config
+  (add-hook 'python-mode-hook 'anaconda-mode)
+  ;;(add-hook 'python-mode-hook 'anaconda-eldoc-mode)
+  )
+(message "Done anaconda-mode")
+(message "Begin company-anaconda")
+(use-package company-anaconda
+  :ensure t
+  :defer t
+  :init (require 'rx)
+  :after (company)
+  :config
+  (add-to-list 'company-backends 'company-anaconda)
+  )
+(message "Done company-anaconda")
+(message "Begin company-quickhelp")
+(use-package company-quickhelp
+  ;; Quickhelp may incorrectly place tooltip towards end of buffer
+  ;; See: https://github.com/expez/company-quickhelp/issues/72
+  :ensure t
+  :defer t
+  :config
+  (company-quickhelp-mode)
+  )
+(message "Done company-quickhelp")
 
 ;; == Enable Flycheck
-(setq flycheck-python-flake8-executable "flake8.exe")
-(when (require 'flycheck nil t)
-  (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
-  ; (setq elpy-eldoc-show-current-function nil)
-  (add-hook 'elpy-mode-hook 'flycheck-mode))
- (setq python-shell-interpreter "ipython"
-        python-shell-interpreter-args "--simple-prompt -i")
+(message "Begin flycheck")
+(use-package flycheck
+  ; Validate using flycheck-verify-setup
+  :ensure t
+  :defer t
+  :init
+    (add-hook 'prog-mode-hook (lambda () (global-flycheck-mode t)))
+  :config
+    (setq flycheck-python-flake8-executable "flake8.exe"
+          flycheck-check-syntax-automatically '(save new-line)
+          flycheck-idle-change-delay 4.0
+          flycheck-display-errors-delay 0.9
+          flycheck-standard-error-navigation t
+          next-error-verbose nil))
+(message "Done flycheck")
+
 ;; == Dumb-jump
-(require 'dumb-jump)
-(add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+(message "Begin dumb-jump")
+(use-package dumb-jump
+  :ensure t
+  :defer t
+  :init
+  :config
+    (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
+    (message "Done dumb-jump!!!"))
+(message "Done dumb-jump")
 
 ;; == which-key
-(require 'which-key)
-(which-key-mode)
+(message "Begin which-key")
+(use-package which-key
+  :ensure t
+  :defer t
+  :init
+    (add-hook 'after-init-hook 'which-key-mode))
+(message "Done which-key")
 
 ;; rainbow-delimiters
+(message "Begin rainbow")
 (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+(message "Done rainbow")
 
 ;; == rust-mode
-(require 'rust-mode)
-(setq rust-format-on-save t)
+(message "Begin rust-mode")
+(use-package rust-mode
+  :ensure t
+  :defer t
+  :mode "\\.\\(rs\\)\\'"
+  :init
+    (message "Inside rust-mode init")
+  :config
+    (setq rust-format-on-save t)
+    (message "Inside rust-mode config"))
+(message "Done rust-mode")
 
 ;; == highlight-indent-guides
-(require 'highlight-indent-guides)
-(add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
-(add-hook 'text-mode-hook 'highlight-indent-guides-mode)
-(add-hook 'elpy-mode-hook (lambda () (highlight-indentation-mode -1))) ;; Use highlight-indentation-mode instead
-(set-face-background 'highlight-indent-guides-odd-face "darkgray")
-(set-face-background 'highlight-indent-guides-even-face "dimgray")
-(set-face-foreground 'highlight-indent-guides-character-face "dimgray")
-(if window-system
-    (progn
-      (setq highlight-indent-guides-method 'bitmap)
-      (setq highlight-indent-guides-responsive 'top)
-      (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-line))
-    (progn
-      (setq highlight-indent-guides-method 'column)
-      (setq highlight-indent-guides-auto-enabled nil)
-      (setq highlight-indent-guides-responsive 'top)
+(message "Begin highlight-indent-guides")
+(use-package highlight-indent-guides
+  :ensure t
+  :defer t
+  :init
+    (add-hook 'prog-mode-hook (lambda () (highlight-indent-guides-mode)))
+    (add-hook 'text-mode-hook (lambda () (highlight-indent-guides-mode)))
+    (add-hook 'python-mode-hook (lambda () (highlight-indentation-mode -1))) ;; Use highlight-indentation-mode instead
+  :config
+    (set-face-background 'highlight-indent-guides-odd-face "darkgray")
+    (set-face-background 'highlight-indent-guides-even-face "dimgray")
+    (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
+    (if window-system
+        (progn
+          (setq highlight-indent-guides-method 'bitmap)
+          (setq highlight-indent-guides-responsive 'top)
+          (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-line))
+        (progn
+          (setq highlight-indent-guides-method 'column)
+          (setq highlight-indent-guides-auto-enabled nil)
+          (setq highlight-indent-guides-responsive 'top)
+        )
     )
 )
+(message "Done highlight-indent-guides")
 
 ;; User-Defined init.el ends here
 
@@ -121,10 +216,13 @@
 
 
 ;; Setup our custom file for local state
-(setq custom-file "~/.emacs.d/custom.el")
-(unless (file-exists-p custom-file)
-  (write-region "" nil custom-file))
-(load-file custom-file)
+;; Move to top to fix package-selected-package
+;; see https://github.com/jwiegley/use-package/issues/397
+(message "Begin load custom-file")
+(setq custom-file (concat user-emacs-directory "custom.el"))
+(unless (file-exists-p custom-file) (write-region "" nil custom-file))
+(load custom-file)
+(message "Done load custom-file")
 
 ;; ===================================
 ;; Lanugage
@@ -143,7 +241,13 @@
 ;; ===================================
 ;; Basic Customization
 ;; ===================================
-(load-theme 'material t)            ;; Load material theme
+(message "Begin load theme")
+; (load-theme 'material t)            ;; Load material theme
+(use-package material-theme
+  :ensure t
+  :defer t
+  :hook (emacs-startup . (lambda () (progn (message "inside theme") (load-theme 'material t)))))
+(message "Done load theme")
 (global-linum-mode t)               ;; Enable line numbers globally
 (setq linum-format "%4d |")
 (setq inhibit-startup-message t)            ;; The startup screen is annoying.
@@ -180,7 +284,7 @@
 (custom-set-variables '(git-grep "rg.exe"))
 
 (setq exec-path (append exec-path '("C:/Program Files/Git/usr/bin")))
-
+(setq exec-path (append exec-path '("C:/Python39/Scripts")))
 
 ;; ===================================
 ;; Set up tabs
@@ -202,15 +306,21 @@
 ;; ===================================
 ;; Filename completion
 ;; ===================================
-(require 'completion)
-;(define-key minibuffer-local-filename-completion-map " " 'minibuffer-complete-word)   ; Allow SPC to complete filenames like version 21
-(define-key minibuffer-local-filename-completion-map (kbd "SPC") 'minibuffer-complete-word)
-(define-key minibuffer-local-must-match-filename-map (kbd "SPC") 'minibuffer-complete-word)
-(setq completion-cycle-threshold  t)
+(message "Begin completion")
+(use-package completion
+    :ensure t
+    :defer t
+    :init
+    :config
+      (define-key minibuffer-local-filename-completion-map (kbd "SPC") 'minibuffer-complete-word)
+      (define-key minibuffer-local-must-match-filename-map (kbd "SPC") 'minibuffer-complete-word)
+      (setq completion-cycle-threshold  t))
+(message "Done completion")
 
 ;; ===================================
 ;; Auto completion
 ;; ===================================
+(message "Begin autocompletion")
 (dynamic-completion-mode)
  ;; Allow tab to autocomplete
 ;(setq-default dabbrev-case-fold-search t)
@@ -229,6 +339,7 @@
 
 (add-hook 'prog-mode-hook 'my-tab-fix)
 (add-hook 'text-mode-hook 'my-tab-fix)
+(message "Done autocompletion")
 
 ;; ===================================
 ;; Modeline
@@ -238,6 +349,7 @@
 ;; The modeline is the bar across the bottom of each buffer (except the
 ;; minibuffer, the line of text at the very bottom of the emacs
 ;; window), which displays various info about the buffer.
+(message "Begin modeline")
 (line-number-mode 1)
 
 ;; This tells emacs to show the column number in each modeline.
@@ -288,6 +400,7 @@
 ;; Backups
 ;; ===================================
 ;; Put backup files neatly away
+(message "Begin backupmode")
 (let ((backup-dir (concat temporary-file-directory "EmacsBackups/"))
       (auto-saves-dir (concat temporary-file-directory "EmacsBackups/auto-saves")))
   (dolist (dir (list backup-dir auto-saves-dir))
@@ -311,21 +424,30 @@
 ;; ====================================
 
 ;; == Orgmode
-(require 'org)
-(define-key global-map "\C-cl" 'org-store-link)
-(define-key global-map "\C-ca" 'org-agenda)
-(setq org-log-done t)
+(use-package org
+    :ensure t
+    :defer t
+    :mode "\\.\\(org\\)\\'"
+    :init
+    :config
+      (define-key global-map "\C-cl" 'org-store-link)
+      (define-key global-map "\C-ca" 'org-agenda)
+      (setq org-log-done t))
 
 ;; == HTML
-(require 'web-mode)
-(setq web-mode-enable-auto-pairing t)
+(use-package web-mode
+  :ensure t
+  :defer t
+  :mode "\\.\\(html?\\|as[cp]x\\|js\\|jsx\\)\\'"
+  :init
+  :config
+    (setq web-mode-enable-auto-pairing t))
 
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.as[cp]x\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.js\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.jsx\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
-;(push '("\\.js$" . web-mode) auto-mode-alist)
 
 ;; == WEB Mode
 (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'"))) ; Treat .js as .jsx
@@ -355,7 +477,12 @@
 (add-hook 'web-mode-hook  'my-web-mode-hook)
 
 ;; == C-Sharp
-(require 'csharp-mode)
+(use-package csharp-mode
+    :ensure t
+    :defer t
+    :mode "\\.\\(cs\\)\\'"
+    :init
+    :config)
 
 ;; == Python
 (add-hook 'python-mode-hook
@@ -369,7 +496,17 @@
 
 ;; == Powershell-mode
 (message (concat (file-name-directory load-file-name) "powershell-mode"))
-(load (concat (file-name-directory load-file-name) "powershell-mode"))
+;ZZZ (load (concat (file-name-directory load-file-name) "powershell-mode"))
+;ZZZ (push '("\\.ps[md123]*$" . powershell-mode) auto-mode-alist)
+;ZZZ (defun my-powershell-mode-hook ()
+  ;ZZZ (progn
+    ;ZZZ (setq tab-width 4)
+    ;ZZZ (setq tab-stop-list (number-sequence 4 120 4))
+    ;ZZZ (local-set-key "\C-m" 'newline-and-indent)
+;ZZZ ))
+;ZZZ (add-hook 'powershell-mode-hook 'my-powershell-mode-hook)
+(message "Begin powershell")
+(autoload 'powershell-mode "powershell-mode" "Powershell Mode for Emacs." t)
 (push '("\\.ps[md123]*$" . powershell-mode) auto-mode-alist)
 (defun my-powershell-mode-hook ()
   (progn
@@ -378,6 +515,7 @@
     (local-set-key "\C-m" 'newline-and-indent)
 ))
 (add-hook 'powershell-mode-hook 'my-powershell-mode-hook)
+(message "Done powershell")
 
 ;; == Lisp
 (setq lisp-body-indent 4)
@@ -460,17 +598,18 @@
 (global-set-key     [(meta s)]               'isearch-repeat-forward)
 (global-set-key     [(meta r)]               'isearch-repeat-backward)
 (global-set-key     [f4]                     'next-error)
-(global-set-key     [f7]                     'compile)
-(global-set-key     [(shift f7)]             'compile-next-makefile)
+;(global-set-key     [f7]                     'compile)
+;(global-set-key     [(shift f7)]             'compile-next-makefile)
 (global-set-key     [mouse-2]                'kill-ring-save)
 (global-set-key     [mouse-3]                'yank)
 (global-set-key     [(control shift j)]         'join-line)
 (global-set-key     [(control shift backspace)] 'delete-horizontal-space)
 
+(message "Done Keybindings")
 
 ; (setq my-site-start-loaded t)
-(provide 'my-site-start)
-(message "Finished loading site-start!!!")
+;(provide 'my-site-start)
+(message (concat "Finished loading site-start in " (emacs-init-time) " seconds!!!"))
 
 ; (setq flycheck-indication-mode 'left-margin)
 (add-hook 'prog-mode-hook (lambda () (setq left-margin-width 2)))

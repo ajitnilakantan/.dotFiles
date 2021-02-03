@@ -46,6 +46,14 @@ choco install --exact --verbose --ignore-dependencies -y rustup.install
 
 choco install --exact --verbose --ignore-dependencies -y golang
 
+
+# Scoop
+Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+scoop install starship
+Invoke-Expression (&starship init powershell) # 'extras/vcredist2019' $PROFILE
+scoop bucket add extras
+scoop install winmerge
+
 # sudo required
 python -m pip install ipython
 python -m pip install flake8

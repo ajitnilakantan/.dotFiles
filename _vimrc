@@ -248,8 +248,13 @@ endif
 nnoremap K :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
 
 " Tabs: https://vim.fandom.com/wiki/Open_every_buffer_in_its_own_tabpage
-nnoremap <C-Left>  :tabprevious<CR>
-nnoremap <C-Right> :tabnext<CR>
+nnoremap <C-Left>  :bprevious<CR>
+nnoremap <C-Right> :bnext<CR>
+" Smart way to move between panes
+map <S-Up> <C-w><Up>
+map <S-Down> <C-w><Down>
+map <S-Left> <C-w><Left>
+map <S-Right> <C-w><Right>
 
 " == Rainbow parentheses
 """ Run :PlugInstall
