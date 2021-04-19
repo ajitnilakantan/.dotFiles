@@ -1,4 +1,4 @@
-# New Document
+# dotFiles Setup
 
 # .dotFiles
 dotFiles repository
@@ -13,6 +13,7 @@ git clone https://github.com/ajitnilakantan/.dotFiles.git
 
 Include the lines
 ```viml
+" ~/.vimrc
 let s:file_list = [
 \ "~/.dotFiles/_vimrc",
 \ "$HOME/.dotFiles/_vimrc",
@@ -28,6 +29,7 @@ let s:file_list = [
 ## .emacsrc
 Include the lines
 ```lisp
+; ~/.emacs
 (catch 'exitLoop
     (setq my-list '("~/.dotFiles/emacs/my-site-start"))
     (dolist (x my-list)
@@ -41,7 +43,7 @@ Include the lines
 Include the lines
 ```sh
 #
-# Add to .profile:
+# Add to ~/.profile:
 (FILE=~/.dotFiles/_profile; [ -f $FILE ] && source $FILE)
 #
 ```
@@ -50,8 +52,16 @@ Include the lines
 Include the lines
 ```sh
 #
-# Add to .zprofile:
+# Add to ~/.zprofile:
 (FILE=~/.dotFiles/_zprofile; [ -f $FILE ] && source $FILE)
 #
 ```
 
+## .zshrc  (Zsh)
+Include the lines
+```sh
+#
+# Add to ~/.zshrc:
+(FILE=~/.dotFiles/_zshrc; [ -f $FILE ] && source $FILE)
+#
+```

@@ -6,6 +6,7 @@ Windows File Recovery: https://www.microsoft.com/en-ca/p/windows-file-recovery/9
 
 choco upgrade all -y  --verbose --ignore-dependencies
 
+choco install --exact --verbose --ignore-dependencies -y powershell-core
 choco install --exact --verbose --ignore-dependencies -y gnuwin32-coreutils.install
 
 choco install --exact --verbose --ignore-dependencies -y gsudo
@@ -53,6 +54,9 @@ scoop install starship
 Invoke-Expression (&starship init powershell) # 'extras/vcredist2019' $PROFILE
 scoop bucket add extras
 scoop install winmerge
+scoop install glow  # Markdown pager
+scoop install zoxide # cd alternative
+scoop install imagemagick # image processing tools
 
 # sudo required
 python -m pip install ipython

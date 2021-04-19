@@ -1,4 +1,4 @@
- # Bash customizations
+ # Bash customizations: Copy to ~/.inputrc
  set completion-ignore-case on
  set enable-keypad on
  set show-all-if-ambiguous on

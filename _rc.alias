@@ -1,4 +1,5 @@
 # Only in interactive shells
+ThisFolder="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 function cls() { clear; }
 alias dev='cd ~/dev'
@@ -24,4 +25,4 @@ function camera_usage() { lsof | egrep -i 'AppleCamera|iSight|VDC' }
 export CLICOLOR=1
 export LESS='eFRX -i -G -M -X -s'
 export LSCOLORS=GxfxcxdxbxGgGdabagacad
-
+export RIPGREP_CONFIG_PATH="$ThisFolder/_ripgreprc"

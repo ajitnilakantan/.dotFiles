@@ -1,3 +1,17 @@
+;; Add to ~/.emacs
+;(catch 'exitLoop
+;    (setq my-list (list (substitute-in-file-name "~/.dotFiles/emacs/my-site-start")
+;                        (substitute-in-file-name "$HOME/.dotFiles/emacs/my-site-start")
+;                        (substitute-in-file-name "$USERPROFILE/.dotFiles/emacs/my-site-start")) )
+;    ;(setq my-list '("~/.dotFiles/emacs/my-site-start"))
+;    (dolist (x my-list)
+;       (message (concat "lOADING " x ))
+;        (if (file-exists-p (concat x ".el"))
+;                (progn (load x)
+;                       (message (concat "Loading " x ))
+;                       (throw 'exitLoop nil) ) ) ) )
+
+
 ; (byte-recompile-directory (file-name-directory load-file-name) 0)
 ;; Timestamp message buffer
 (defun sh/current-time-microseconds ()
@@ -48,21 +62,20 @@
 ;;
 ;; myPackages contains a list of package names
 (defvar myPackages
-  '(use-package                     ;; Package management
-    better-defaults                 ;; Set up some better Emacs defaults
-    anaconda-mode                   ;; Emacs Lisp Python Environment
-    company                         ;; Completion
-    flycheck                        ;; On the fly syntax checking
-    ; py-autopep8                   ;; Run autopep8 on save
-    blacken                         ;; Black formatting on save
-    csharp-mode                     ;; For C#
-    web-mode                        ;; For html, jsx
-    rust-mode                       ;; Rust (*.rs)
-    dumb-jump                       ;; Jump to definition under mouse M-.
-    which-key                       ;; displays the key bindings interactively
-    material-theme                  ;; Theme
-    rainbow-delimiters              ;; Rainbow matching brackets
-    highlight-indent-guides         ;; Highlight tabs
+  '(use-package                     ; Package management
+    better-defaults                 ; Set up some better Emacs defaults
+    elpy                            ; Emacs Lisp Python Environment
+    flycheck                        ; On the fly syntax checking
+    ; py-autopep8                   ; Run autopep8 on save
+    blacken                         ; Black formatting on save
+    csharp-mode                     ; For C#
+    web-mode                        ; For html, jsx
+    rust-mode                       ; Rust (*.rs)
+    dumb-jump                       ; Jump to definition under mouse M-.
+    which-key                       ; displays the key bindings interactively
+    material-theme                  ; Theme
+    rainbow-delimiters              ; Rainbow matching brackets
+    highlight-indent-guides         ; Highlight tabs
     )
   )
 
@@ -80,53 +93,21 @@
 ;; ====================================
 ;; Development Setup
 ;; ====================================
-;; == Enable anaconda
-(message "Begin company")
-(use-package company
- :ensure t
- :defer t
- :config
- (setq company-idle-delay 0
-       company-minimum-prefix-length 2
-       company-show-numbers t
-       company-tooltip-limit 10
-       company-tooltip-align-annotations t
-       ;; invert the navigation direction if the the completion popup-isearch-match
-       ;; is displayed on top (happens near the bottom of windows)
-       company-tooltip-flip-when-above t)
- (global-company-mode t)
- )
-(message "Done company")
 
-(message "Begin anaconda-mode")
-(use-package anaconda-mode
+;; == Enable elpy
+
+(message "Begin elpy")
+(use-package elpy
   :ensure t
   :defer t
   :config
-  (add-hook 'python-mode-hook 'anaconda-mode)
-  ;;(add-hook 'python-mode-hook 'anaconda-eldoc-mode)
+  (add-hook 'python-mode-hook 'elpy-enable)
   )
-(message "Done anaconda-mode")
-(message "Begin company-anaconda")
-(use-package company-anaconda
-  :ensure t
-  :defer t
-  :init (require 'rx)
-  :after (company)
-  :config
-  (add-to-list 'company-backends 'company-anaconda)
-  )
-(message "Done company-anaconda")
-(message "Begin company-quickhelp")
-(use-package company-quickhelp
-  ;; Quickhelp may incorrectly place tooltip towards end of buffer
-  ;; See: https://github.com/expez/company-quickhelp/issues/72
-  :ensure t
-  :defer t
-  :config
-  (company-quickhelp-mode)
-  )
-(message "Done company-quickhelp")
+(message "Done elpy")
+
+
+;; == Show the current function name in the header line
+(which-function-mode)
 
 ;; == Enable Flycheck
 (message "Begin flycheck")
@@ -153,7 +134,7 @@
   :init
   :config
     (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
-    (message "Done dumb-jump!!!"))
+    (message "inside dumb-jump config"))
 (message "Done dumb-jump")
 
 ;; == which-key
@@ -177,10 +158,10 @@
   :defer t
   :mode "\\.\\(rs\\)\\'"
   :init
-    (message "Inside rust-mode init")
+    (message "inside rust-mode init")
   :config
     (setq rust-format-on-save t)
-    (message "Inside rust-mode config"))
+    (message "inside rust-mode config"))
 (message "Done rust-mode")
 
 ;; == highlight-indent-guides
@@ -242,25 +223,25 @@
 ;; Basic Customization
 ;; ===================================
 (message "Begin load theme")
-; (load-theme 'material t)            ;; Load material theme
 (use-package material-theme
   :ensure t
   :defer t
-  :hook (emacs-startup . (lambda () (progn (message "inside theme") (load-theme 'material t)))))
+  :hook (emacs-startup . (lambda () (progn (message "inside load-theme") (load-theme 'material t)))))
 (message "Done load theme")
-(global-linum-mode t)               ;; Enable line numbers globally
+
+(global-linum-mode t)                       ; Enable line numbers globally
 (setq linum-format "%4d |")
-(setq inhibit-startup-message t)            ;; The startup screen is annoying.
-(setq Buffer-menu-name-width 40)            ;; Widen for long filenames
-(setq require-final-newline t)              ;; Will make the last line end in a carriage return.
-(show-paren-mode 1)                         ;; turn on paren match highlighting
-; (setq initial-buffer-choice "*scratch*")  ;; Start with the scratch buffer
-(setq visible-bell t)                       ;; Silence
+(setq inhibit-startup-message t)            ; The startup screen is annoying.
+(setq Buffer-menu-name-width 40)            ; Widen for long filenames
+(setq require-final-newline t)              ; Will make the last line end in a carriage return.
+(show-paren-mode 1)                         ; turn on paren match highlighting
+; (setq initial-buffer-choice "*scratch*")  ; Start with the scratch buffer
+(setq visible-bell t)                       ; Silence
 (setq ring-bell-function (lambda () (message "*beep*")))
-(global-auto-revert-mode t)                 ;; Auto-REVERT when a file is changed outside Emacs
-(setq scroll-step 1)                        ;; Scroll line at a time, instead of in larger amounts.
-(defalias 'yes-or-no-p 'y-or-n-p)           ;; Makes things a little bit more consistent.
-(setq w32-use-full-screen-buffer nil)       ;; Make sure that Emacs in console mode doesn't go beyond the size of the Dos box in use.
+(global-auto-revert-mode t)                 ; Auto-REVERT when a file is changed outside Emacs
+(setq scroll-step 1)                        ; Scroll line at a time, instead of in larger amounts.
+(defalias 'yes-or-no-p 'y-or-n-p)           ; Makes things a little bit more consistent.
+(setq w32-use-full-screen-buffer nil)       ; Make sure that Emacs in console mode doesn't go beyond the size of the Dos box in use.
 (setq w32-get-true-file-attributes nil)
 ; (setq x-select-enable-clipboard t)
 (setq select-enable-clipboard t)
@@ -293,7 +274,7 @@
 (setq tab-stop-list (number-sequence 4 120 4))      ; tab-stop-list is used when adding tabs
 (setq-default indent-tabs-mode nil)                 ; Don't let emacs handle tabs
 
-(setq custom-tab-width 4)                           ;; Our Custom Variable
+(setq custom-tab-width 4)                           ; Our Custom Variable
 (setq-default python-indent-offset custom-tab-width)
 (setq-default evil-shift-width custom-tab-width)
 (setq-default electric-indent-inhibit t)            ; Making Indentation Behave Sanely
@@ -355,31 +336,47 @@
 ;; This tells emacs to show the column number in each modeline.
 (column-number-mode 1)
 
+;; Get the buffer coding format
+(defvar my-mode-line-coding-format
+      '(:eval
+        (let* ((code (symbol-name buffer-file-coding-system))
+               (eol-type (coding-system-eol-type buffer-file-coding-system))
+               (eol (if (eq 0 eol-type) "UNIX"
+                      (if (eq 1 eol-type) "DOS"
+                        (if (eq 2 eol-type) "MAC"
+                          "???")))))
+          (concat code " " eol))))
+(put 'my-mode-line-coding-format 'risky-local-variable t)
+
 (setq mode-line-inverse-video 't)
 (setq default-mode-line-format
   (list
-    "<" mode-line-modified                      ;; Modified
-     "(" 'buffer-file-coding-system buffer-file-coding-system ")" ">"
-    'mode-line-process                          ;; Line
+     mode-line-modified                         ; Modified
+     "(" my-mode-line-coding-format ")"         ; File encoding
+    'mode-line-process                          ; Line
      "L%l "
-    'mode-column-process                        ;; Column
+    'mode-column-process                        ; Column
      "C%c "
-     "(" '(-3 . "%P") ") "                      ;; Perentage
-
-    'mode-line-modes
+     "(" '(-3 . "%P") ")"                       ; Perentage
+    " >> "
+    'mode-name
+    " >> "
+    'mode-line-misc-info
+    ">>"
 
     (propertize
-      " %14b "                                  ;; Filename
+      " %14b "                                  ; Filename
       'help-echo "Copy to clipboard"
       'mouse-face 'mode-line-highlight
       'local-map '(keymap (mode-line keymap (mouse-1 . (lambda (event) (interactive "e") (kill-new (buffer-name)))))))
+    ">>"
     (propertize
-      " %36f"                                   ;; Directory
+      " %36f"                                   ; Directory
       'help-echo '"Copy to clipboard"
       'mouse-face 'mode-line-highlight
       'face 'bold
       'local-map '(keymap (mode-line keymap (mouse-1 . (lambda (event) (interactive "e") (kill-new (replace-regexp-in-string "/" "\\\\" (if buffer-file-name buffer-file-name ""))))))))
-    " -%-"                                      ;; Fill
+    " -%-"                                      ; Fill
 ))
 
 (custom-set-faces
@@ -496,15 +493,6 @@
 
 ;; == Powershell-mode
 (message (concat (file-name-directory load-file-name) "powershell-mode"))
-;ZZZ (load (concat (file-name-directory load-file-name) "powershell-mode"))
-;ZZZ (push '("\\.ps[md123]*$" . powershell-mode) auto-mode-alist)
-;ZZZ (defun my-powershell-mode-hook ()
-  ;ZZZ (progn
-    ;ZZZ (setq tab-width 4)
-    ;ZZZ (setq tab-stop-list (number-sequence 4 120 4))
-    ;ZZZ (local-set-key "\C-m" 'newline-and-indent)
-;ZZZ ))
-;ZZZ (add-hook 'powershell-mode-hook 'my-powershell-mode-hook)
 (message "Begin powershell")
 (autoload 'powershell-mode "powershell-mode" "Powershell Mode for Emacs." t)
 (push '("\\.ps[md123]*$" . powershell-mode) auto-mode-alist)
@@ -524,7 +512,7 @@
 (add-hook 'emacs-lisp-mode-hook 'my-emacs-lisp-mode-hook)
 
 ;; == XML
-(add-to-list 'auto-mode-alist '("\\.xml\\'" . nxml-mode))   ;;For xml files, use nxml-mode instead of sgml-mode
+(add-to-list 'auto-mode-alist '("\\.xml\\'" . nxml-mode))   ; For xml files, use nxml-mode instead of sgml-mode
 
 
 ;; ====================================
@@ -597,6 +585,10 @@
 (global-set-key     [(meta shift q)]         'query-replace-regexp)
 (global-set-key     [(meta s)]               'isearch-repeat-forward)
 (global-set-key     [(meta r)]               'isearch-repeat-backward)
+(global-set-key     [(control .)]            'repeat)     ; Repeat last
+(global-set-key     [(control f1)]           "\C-x\C-k1") ; Run macro1 \C-x\C-kb1
+(global-set-key     [(control f2)]           "\C-x\C-k2") ; Run macro1 \C-x\C-kb2
+(global-set-key     [(control f3)]           "\C-x\C-k3") ; Run macro1 \C-x\C-kb3
 (global-set-key     [f4]                     'next-error)
 ;(global-set-key     [f7]                     'compile)
 ;(global-set-key     [(shift f7)]             'compile-next-makefile)
@@ -607,7 +599,7 @@
 
 (message "Done Keybindings")
 
-; (setq my-site-start-loaded t)
+;(setq my-site-start-loaded t)
 ;(provide 'my-site-start)
 (message (concat "Finished loading site-start in " (emacs-init-time) " seconds!!!"))
 

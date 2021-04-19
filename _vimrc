@@ -1,3 +1,16 @@
+"" Add to ~/.vimrc
+"let s:file_list = [
+"\ "~/.dotFiles/_vimrc",
+"\ "$HOME/.dotFiles/_vimrc",
+"\ findfile('.dotFiles/_vimrc', fnamemodify($MYVIMRC, ':p:h')), ]
+":for filename in s:file_list
+"  :if filereadable(filename)
+"    :execute 'source '.fnameescape(filename)
+"    :break
+"  :endif
+":endfor
+
+
 source $VIMRUNTIME/defaults.vim
 
 " == Store backup, undo, and swap files in temp directory
