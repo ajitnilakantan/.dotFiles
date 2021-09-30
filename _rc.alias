@@ -13,6 +13,10 @@ function po () { popd  "$1"; }
 function md () { mkdir  "$1"; }
 function rd () { rmdir  "$1"; }
 function ff () { 2>/dev/null find -x . -name "$1" -print; }
+#
+# Copy file on ssh host back to client
+function ssh_cp_client() { scp "$1" "[${SSH_CLIENT% *}]":/tmp/ }
+
 
 function w () { if [[ $* =~ [.] ]]; then w=$*; else w=$*.com; fi; echo $w; whois $w | egrep "Expir"; }
 
