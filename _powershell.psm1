@@ -67,6 +67,7 @@ function time([string]$cmd)
 Set-Alias -Name emacs -Value C:\bat\emacs.cmd
 Set-Alias -Name pd -Value Push-Location
 Set-Alias -Name po -Value Pop-Location
+If (Test-Path Alias:r)  {rm alias:\r}  # Conflicts with "R"
 
 If (Test-Path Alias:ls) {Remove-Item Alias:ls}
 If (Test-Path Alias:ls) {Remove-Item Alias:ls}

@@ -123,6 +123,7 @@ set pastetoggle=<F12>           " pastetoggle (sane indentation on pastes)
 set foldenable                  " Auto fold code
 set list
 set listchars=tab:›\ ,trail:•,extends:#,nbsp:. " Highlight problematic whitespace
+syn match markdownError "\w\@<=\w\@=" " Don't flag undescore as an error
 
 " == Edit
 set spell spelllang=en_us

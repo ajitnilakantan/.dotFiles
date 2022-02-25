@@ -6,7 +6,7 @@ Version = "3"
 
 [Profiles.'Default Profile'.GeneralSettings]
 Width = 224.0
-Height = 42.0
+Height = 40.0
 BackgroundColor = "#00FFFFFF"
 
 [Profiles.'Default Profile'.PreviousButtonSettings]
