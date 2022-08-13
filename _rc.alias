@@ -1,13 +1,14 @@
 # Only in interactive shells
 ThisFolder="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+echo this=$ThisFolder
 function cls() { clear; }
 alias dev='cd ~/dev'
-function dir() { ls $*; }
-function del() { rm -i $*; }
-function move() { mv -i $*; }
-function mov() { mv -i $*; }
-function ren() { mv -i $*; }
+function dir() { ls "$@"; }
+function del() { rm -i "$@"; }
+function move() { mv -i "$@"; }
+function mov() { mv -i "$@"; }
+function ren() { mv -i "$@"; }
 alias ls='ls -FG'
 function pd () { pushd "$1"; }
 function po () { popd  "$1"; }
@@ -16,13 +17,13 @@ function rd () { rmdir  "$1"; }
 function ff () { 2>/dev/null find -x . -name "$1" -print; }
 #
 # Copy file on ssh host back to client
-function ssh_cp_client() { scp "$1" "[${SSH_CLIENT% *}]":/tmp/ }
+function ssh_cp_client() { scp "$1" "[${SSH_CLIENT% *}]":/tmp/; }
 
 
-function w () { if [[ $* =~ [.] ]]; then w=$*; else w=$*.com; fi; echo $w; whois $w | egrep "Expir"; }
+function w () { if [[ $* =~ [.] ]]; then w="$@"; else w="$@".com; fi; echo "$w"; whois "$w" | grep "Expir"; }
 
 function gitdiff() { git fetch origin ; git diff --name-only master origin/master; git diff @ '@{upstream}'; }
-function camera_usage() { lsof | egrep -i 'AppleCamera|iSight|VDC' }
+function camera_usage() { lsof | grep -i 'AppleCamera|iSight|VDC'; }
 
 
 # Environment variables for interactive use only

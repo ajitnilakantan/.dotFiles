@@ -1,4 +1,4 @@
-;; Add to ~/.emacs
+; Add to ~/.emacs
 ;(catch 'exitLoop
 ;    (setq my-list (list (substitute-in-file-name "~/.dotFiles/emacs/my-site-start")
 ;                        (substitute-in-file-name "$HOME/.dotFiles/emacs/my-site-start")
@@ -13,6 +13,7 @@
 
 
 ; (byte-recompile-directory (file-name-directory load-file-name) 0)
+
 ;; Timestamp message buffer
 (defun sh/current-time-microseconds ()
   (let* ((nowtime (current-time))
@@ -50,8 +51,8 @@
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
 
 ;; Initializes the package infrastructure
-(setq gc-cons-threshold 64000000)
-(add-hook 'after-init-hook #'(lambda () (setq gc-cons-threshold 800000))) ; restore after startup
+(setq gc-cons-threshold 100000000)
+(add-hook 'after-init-hook #'(lambda () (setq gc-cons-threshold 100000000))) ; restore after startup
 (package-initialize)
 
 ;; If there are no archived package contents, refresh them
@@ -64,18 +65,22 @@
 (defvar myPackages
   '(use-package                     ; Package management
     better-defaults                 ; Set up some better Emacs defaults
-    elpy                            ; Emacs Lisp Python Environment
+;   elpy                            ; Emacs Lisp Python Environment
     flycheck                        ; On the fly syntax checking
     ; py-autopep8                   ; Run autopep8 on save
     blacken                         ; Black formatting on save
-    csharp-mode                     ; For C#
-    web-mode                        ; For html, jsx
-    rust-mode                       ; Rust (*.rs)
+;   csharp-mode                     ; For C#
+;   web-mode                        ; For html, jsx
+;   rust-mode                       ; Rust (*.rs)
     dumb-jump                       ; Jump to definition under mouse M-.
     which-key                       ; displays the key bindings interactively
     material-theme                  ; Theme
     rainbow-delimiters              ; Rainbow matching brackets
     highlight-indent-guides         ; Highlight tabs
+    tree-sitter                     ; Treesitter
+    tree-sitter-langs               ; Treesitter
+;   lsp-mode                        ; Language server protocol
+;   lsp-pyright                     ; LSP-python
     )
   )
 
@@ -96,34 +101,38 @@
 
 ;; == Enable elpy
 
-(message "Begin elpy")
-(use-package elpy
-  :ensure t
-  :defer t
-  :config
-  (add-hook 'python-mode-hook 'elpy-enable)
-  )
-(message "Done elpy")
+;(message "Begin elpy")
+;(use-package elpy
+;  :ensure t
+;  :defer t
+;  :config
+;  (add-hook 'python-mode-hook #'elpy-enable)
+;  )
+;(message "Done elpy")
 
 
 ;; == Show the current function name in the header line
-(which-function-mode)
+;(which-function-mode)
 
 ;; == Enable Flycheck
 (message "Begin flycheck")
 (use-package flycheck
-  ; Validate using flycheck-verify-setup
-  :ensure t
-  :defer t
-  :init
-    (add-hook 'prog-mode-hook (lambda () (global-flycheck-mode t)))
-  :config
-    (setq flycheck-python-flake8-executable "flake8.exe"
-          flycheck-check-syntax-automatically '(save new-line)
-          flycheck-idle-change-delay 4.0
-          flycheck-display-errors-delay 0.9
-          flycheck-standard-error-navigation t
-          next-error-verbose nil))
+ ; Validate using flycheck-verify-setup
+ :ensure t
+ :defer t
+ :init
+   (add-hook 'prog-mode-hook #'(lambda () (global-flycheck-mode t)))
+ :config
+   (progn (setq flycheck-python-flake8-executable "flake8.exe"
+         flycheck-check-syntax-automatically '(save new-line)
+         flycheck-idle-change-delay 4.0
+         flycheck-display-errors-delay 0.9
+         flycheck-standard-error-navigation t
+         next-error-verbose nil
+         )
+          (setq-default flycheck-disabled-checkers '(c/c++-clang))
+   )
+)
 (message "Done flycheck")
 
 ;; == Dumb-jump
@@ -143,7 +152,7 @@
   :ensure t
   :defer t
   :init
-    (add-hook 'after-init-hook 'which-key-mode))
+    (add-hook 'after-init-hook #'which-key-mode))
 (message "Done which-key")
 
 ;; rainbow-delimiters
@@ -152,17 +161,18 @@
 (message "Done rainbow")
 
 ;; == rust-mode
-(message "Begin rust-mode")
-(use-package rust-mode
-  :ensure t
-  :defer t
-  :mode "\\.\\(rs\\)\\'"
-  :init
-    (message "inside rust-mode init")
-  :config
-    (setq rust-format-on-save t)
-    (message "inside rust-mode config"))
-(message "Done rust-mode")
+;; (message "Begin rust-mode")
+;; (use-package rust-mode
+;;   :ensure t
+;;   :defer t
+;;   :mode "\\.\\(rs\\)\\'"
+;;   :init
+;;     (message "inside rust-mode init")
+;;   :config
+;;     (setq rust-format-on-save t)
+;;     (message "inside rust-mode config"))
+;; (message "Done rust-mode")
+
 
 ;; == highlight-indent-guides
 (message "Begin highlight-indent-guides")
@@ -170,9 +180,9 @@
   :ensure t
   :defer t
   :init
-    (add-hook 'prog-mode-hook (lambda () (highlight-indent-guides-mode)))
-    (add-hook 'text-mode-hook (lambda () (highlight-indent-guides-mode)))
-    (add-hook 'python-mode-hook (lambda () (highlight-indentation-mode -1))) ;; Use highlight-indentation-mode instead
+    (add-hook 'prog-mode-hook #'(lambda () (highlight-indent-guides-mode)))
+    (add-hook 'text-mode-hook #'(lambda () (highlight-indent-guides-mode)))
+    (add-hook 'python-mode-hook #'(lambda () (highlight-indentation-mode -1))) ;; Use highlight-indentation-mode instead
   :config
     (set-face-background 'highlight-indent-guides-odd-face "darkgray")
     (set-face-background 'highlight-indent-guides-even-face "dimgray")
@@ -190,6 +200,41 @@
     )
 )
 (message "Done highlight-indent-guides")
+
+;; Tree Sitter
+(message "Begin treesitter")
+(use-package tree-sitter
+  :ensure t
+  :defer t
+  :init
+    )
+(use-package tree-sitter-langs
+  :ensure t
+  :defer t
+  :init
+    )
+(message "Done treesitter")
+
+;; LSP
+;; (message "Begin lsp-mode")
+;; ; Install with  M-x lsp-install-server
+;; ; Python:  python -m pip install pyright
+;; (use-package lsp-mode
+;;   :init
+;;   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+;;   (setq lsp-keymap-prefix "C-c l")
+;;   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+;;          (prog-mode . lsp-deferred)
+;;          ;; if you want which-key integration
+;;          (lsp-mode . lsp-enable-which-key-integration))
+;;   :commands (lsp lsp-deferred))
+
+;; (use-package lsp-pyright
+;;   :ensure t
+;;   :hook (python-mode . (lambda ()
+;;                           (require 'lsp-pyright)
+;;                           (lsp lsp-deferred))))  ; or lsp-deferred
+;; (message "Done lsp")
 
 ;; User-Defined init.el ends here
 
@@ -294,7 +339,7 @@
     :init
     :config
       (define-key minibuffer-local-filename-completion-map (kbd "SPC") 'minibuffer-complete-word)
-      (define-key minibuffer-local-must-match-filename-map (kbd "SPC") 'minibuffer-complete-word)
+      ; (define-key minibuffer-local-must-match-filename-map (kbd "SPC") 'minibuffer-complete-word)
       (setq completion-cycle-threshold  t))
 (message "Done completion")
 
@@ -318,8 +363,8 @@
     (local-set-key [tab] 'indent-or-expand)
     (local-set-key [backtab] 'indent-for-tab-command))
 
-(add-hook 'prog-mode-hook 'my-tab-fix)
-(add-hook 'text-mode-hook 'my-tab-fix)
+(add-hook 'prog-mode-hook #'my-tab-fix)
+(add-hook 'text-mode-hook #'my-tab-fix)
 (message "Done autocompletion")
 
 ;; ===================================
@@ -388,7 +433,7 @@
   ; Start with new default.
   (setq mode-line-format default-mode-line-format))
 
-(add-hook 'after-change-major-mode-hook 'clean-mode-line)
+(add-hook 'after-change-major-mode-hook #'clean-mode-line)
 
 (message "Set modeline")
 
@@ -419,6 +464,10 @@
 ;; ====================================
 ;; Development Setup
 ;; ====================================
+
+;; == c-mode
+(setq c-default-style "linux"
+      c-basic-offset 4)
 
 ;; == Orgmode
 (use-package org
@@ -471,45 +520,46 @@
     '(("css" . (ac-source-css-property))
       ("html" . (ac-source-words-in-buffer ac-source-abbrev))))
 )
-(add-hook 'web-mode-hook  'my-web-mode-hook)
+(add-hook 'web-mode-hook  #'my-web-mode-hook)
 
 ;; == C-Sharp
-(use-package csharp-mode
-    :ensure t
-    :defer t
-    :mode "\\.\\(cs\\)\\'"
-    :init
-    :config)
+;; (use-package csharp-mode
+;;     :ensure t
+;;     :defer t
+;;     :mode "\\.\\(cs\\)\\'"
+;;     :init
+;;     :config)
+
 
 ;; == Python
 (add-hook 'python-mode-hook
       ; Automatically remove trailing whitespace when file is saved.
-      (lambda()
+      #'(lambda()
         ; (add-hook 'local-write-file-hooks
         (add-hook 'write-file-functions
-              '(lambda()
+              #'(lambda()
                  (save-excursion
                    (delete-trailing-whitespace))))))
 
 ;; == Powershell-mode
-(message (concat (file-name-directory load-file-name) "powershell-mode"))
-(message "Begin powershell")
-(autoload 'powershell-mode "powershell-mode" "Powershell Mode for Emacs." t)
-(push '("\\.ps[md123]*$" . powershell-mode) auto-mode-alist)
-(defun my-powershell-mode-hook ()
-  (progn
-    (setq tab-width 4)
-    (setq tab-stop-list (number-sequence 4 120 4))
-    (local-set-key "\C-m" 'newline-and-indent)
-))
-(add-hook 'powershell-mode-hook 'my-powershell-mode-hook)
-(message "Done powershell")
+;; (message (concat (file-name-directory load-file-name) "powershell-mode"))
+;; (message "Begin powershell")
+;; (autoload 'powershell-mode "powershell-mode" "Powershell Mode for Emacs." t)
+;; (push '("\\.ps[md123]*$" . powershell-mode) auto-mode-alist)
+;; (defun my-powershell-mode-hook ()
+;;   (progn
+;;     (setq tab-width 4)
+;;     (setq tab-stop-list (number-sequence 4 120 4))
+;;     (local-set-key "\C-m" 'newline-and-indent)
+;; ))
+;; (add-hook 'powershell-mode-hook #'my-powershell-mode-hook)
+;; (message "Done powershell")
 
 ;; == Lisp
 (setq lisp-body-indent 4)
 (defun my-emacs-lisp-mode-hook ()
   (setq comment-column 0))
-(add-hook 'emacs-lisp-mode-hook 'my-emacs-lisp-mode-hook)
+(add-hook 'emacs-lisp-mode-hook #'my-emacs-lisp-mode-hook)
 
 ;; == XML
 (add-to-list 'auto-mode-alist '("\\.xml\\'" . nxml-mode))   ; For xml files, use nxml-mode instead of sgml-mode
@@ -559,10 +609,10 @@
 )
 
 (defun th-activate-mark-init () (setq cursor-type 'bar))
-(add-hook 'activate-mark-hook 'th-activate-mark-init)
+(add-hook 'activate-mark-hook #'th-activate-mark-init)
 
 (defun th-deactivate-mark-init () (setq cursor-type 'box))
-(add-hook 'deactivate-mark-hook 'th-deactivate-mark-init)
+(add-hook 'deactivate-mark-hook #'th-deactivate-mark-init)
 
 
 ;; Keybindings
@@ -570,8 +620,8 @@
 (global-set-key     [(control x) (p)]        'select-previous-window)
 (global-set-key     [(control x) (n)]        'select-next-window)
 (global-set-key     [(control x) (x)]        'bs-cycle-next)
-(global-set-key     [(control home)]         '(lambda ()(interactive)(beginning-of-buffer)))
-(global-set-key     [(control end)]          '(lambda ()(interactive)(end-of-buffer)))
+(global-set-key     [(control home)]         #'(lambda ()(interactive)(beginning-of-buffer)))
+(global-set-key     [(control end)]          #'(lambda ()(interactive)(end-of-buffer)))
 (global-set-key     [(meta control f)]       'match-paren)
 (global-set-key     [(meta control r)]       'isearch-backward-regexp)
 (global-set-key     [(meta control s)]       'isearch-forward-regexp)
@@ -604,5 +654,5 @@
 (message (concat "Finished loading site-start in " (emacs-init-time) " seconds!!!"))
 
 ; (setq flycheck-indication-mode 'left-margin)
-(add-hook 'prog-mode-hook (lambda () (setq left-margin-width 2)))
-(add-hook 'prog-mode-hook (lambda () (setq left-fringe-width 16)))
+(add-hook 'prog-mode-hook #'(lambda () (setq left-margin-width 2)))
+(add-hook 'prog-mode-hook #'(lambda () (setq left-fringe-width 16)))
