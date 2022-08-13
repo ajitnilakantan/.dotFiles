@@ -29,4 +29,4 @@ function camera_usage() { lsof | egrep -i 'AppleCamera|iSight|VDC' }
 export CLICOLOR=1
 export LESS='eFRX -i -G -M -X -s'
 export LSCOLORS=GxfxcxdxbxGgGdabagacad
-export RIPGREP_CONFIG_PATH="$ThisFolder/_ripgreprc"
+export RIPGREP_CONFIG_PATH="${ThisFolder}/_ripgreprc"

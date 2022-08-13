@@ -35,6 +35,9 @@ bindkey '[1;2D' backward-char # Shift left
 setopt PROMPT_SUBST
 PROMPT='%n%f@%F{yellow}%m%f %B%~%b %# '
 PROMPT='%n%f@%F{yellow}%m%f %B%~%b %(?..%F{red})%#%f '
+if [[ "$TERM" == "dumb" ]]; then
+  PS1='$ '
+fi
 
 # Load interactive aliases and functions
 FILE=~/.dotFiles/_rc.alias; [ -f $FILE ] && source $FILE; unset FILE

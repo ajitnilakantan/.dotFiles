@@ -10,7 +10,9 @@ if [ "$PS1" ]; then
     FILE=~/.dotFiles/_inputrc; [ -f $FILE ] && bind -f $FILE
 
     # Set prompt
-    if [ -z "$COLORTERM" ] && [ "$TERM" != "xterm-256color" ]; then
+    if [ "$TERM" == "dumb" ]; then
+      PS1='$ '
+    elif [ -z "$COLORTERM" ] && [ "$TERM" != "xterm-256color" ]; then
       PS1='\u@\h:\w\$ '
     else
       if [ "$USER" == "root" ]; then
