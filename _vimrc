@@ -125,6 +125,14 @@ set list
 set listchars=tab:›\ ,trail:•,extends:#,nbsp:. " Highlight problematic whitespace
 syn match markdownError "\w\@<=\w\@=" " Don't flag undescore as an error
 
+" == Autocomplete
+" Ctrl-X Ctrl-L  line based completion (:help ins-completion)
+" Ctrl-X Ctrl-F  filename completion
+" Ctrl-X Ctrl-K  dictionary completion
+" Ctrl-X Ctrl-T  thesaurus competion
+" Ctrl-N         completion in insertmode
+" Ctrl-P         completion in insertmode
+
 " == Edit
 set spell spelllang=en_us
 set nospell

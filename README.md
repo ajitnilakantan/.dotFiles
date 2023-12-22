@@ -69,7 +69,25 @@ Include the lines
 
 ## Git setup
 ```sh
+git config --global user.name "Full Name"
+git config --global user.email "name@email.com"
+
 git config --global pull.rebase true
 git config --global fetch.prune true
 git config --global diff.colorMoved zebra
+git config --global color.ui true
+#git config --global core.editor vi
+
+```
+
+## Scoop setup (Windows)
+See: https://github.com/ScoopInstaller/Scoop/issues/1606
+```sh
+scoop config shim kiennq
+scoop reset *
+```
+
+## MacOs setup
+```sh
+git --version   # Will install xcode cli tools
 ```

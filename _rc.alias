@@ -22,7 +22,8 @@ function ssh_cp_client() { scp "$1" "[${SSH_CLIENT% *}]":/tmp/; }
 
 function w () { if [[ $* =~ [.] ]]; then w="$@"; else w="$@".com; fi; echo "$w"; whois "$w" | grep "Expir"; }
 
-function gitdiff() { git fetch origin ; git diff --name-only master origin/master; git diff @ '@{upstream}'; }
+# function gitdiff() { git fetch origin ; git diff --name-only master origin/master; git diff @ '@{upstream}'; }
+function gitdiff() { git fetch; git diff   '@{upstream}'; echo '==='; git diff '@' '@{upstream}'; echo '===' }
 function camera_usage() { lsof | grep -i 'AppleCamera|iSight|VDC'; }
 
 

@@ -1,0 +1,6 @@
+emacs/custom.el
+emacs/elpa/**
+emacs/history
+emacs/projects
+emacs/transient/**
+emacs/tree-sitter/**

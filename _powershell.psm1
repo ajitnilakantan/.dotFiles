@@ -10,13 +10,16 @@
 # This script location
 $Script:ThisFolder = (Split-Path $MyInvocation.MyCommand.Path -Parent)
 
-# Startship prompt
-Invoke-Expression (&starship init powershell)
+# Starship prompt
+if (Get-Command starship) {
+   Invoke-Expression (&starship init powershell)
+}
 
 # Set font colour to red in admin windows
 if ( ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) )
 {
     $Host.UI.RawUI.ForegroundColor = "Red";
+    $Host.UI.RawUI.WindowTitle = '***Administrator***'
     cd C:\
 }
 
@@ -48,7 +51,7 @@ function ff()
 
 function tldr([string]$cmd)
 {
-    & curl.exe -s "https://raw.githubusercontent.com/tldr-pages/tldr/master/pages/common/$($cmd).md" | & glow.exe - -p
+    & curl.exe -s "https://raw.githubusercontent.com/tldr-pages/tldr/master/pages/common/$($cmd).md" | & bat.exe --language md --style plain
 }
 
 function time([string]$cmd)
@@ -63,10 +66,32 @@ function time([string]$cmd)
     Write-Host -ForeGround Yellow "$result seconds"
 }
 
+function gitdiff()
+{
+    git fetch; git diff   '@{upstream}'; echo '==='; git diff '@' '@{upstream}'; echo '==='
+}
 
-Set-Alias -Name emacs -Value C:\bat\emacs.cmd
+function emacs()
+{
+    $local:emacsinit = (Join-Path $ThisFolder 'emacs')
+    Start-Process -NoNewWindow -Wait "$($(Get-Command 'emacs.exe').Path)"  $("--init-directory",$local:emacsinit,"-nw",$args | Join-String -DoubleQuote -Separator ' ')
+}
+
+function emacsw()
+{
+    $local:emacsinit = (Join-Path $ThisFolder 'emacs')
+    Start-Process -NoNewWindow "$($(Get-Command 'emacs.exe').Path)" $("--init-directory",$local:emacsinit,$args | Join-String -DoubleQuote -Separator ' ')
+}
+
+function gvim()
+{
+    Start-Process -NoNewWindow "$($(Get-Command 'gvim.exe').Path)" $($args | Join-String -DoubleQuote -Separator ' ')
+}
+
 Set-Alias -Name pd -Value Push-Location
 Set-Alias -Name po -Value Pop-Location
+
+
 If (Test-Path Alias:r)  {rm alias:\r}  # Conflicts with "R"
 
 If (Test-Path Alias:ls) {Remove-Item Alias:ls}
@@ -75,11 +100,23 @@ If (Test-Path Alias:ls) {Remove-Item Alias:ls}
 ##
 # Autoload 'z': https://github.com/ajeetdsouza/zoxide#powershell
 ##
-Invoke-Expression (& {
-    $hook = if ($PSVersionTable.PSVersion.Major -lt 6) { 'prompt' } else { 'pwd' }
-    (zoxide init --hook $hook powershell) -join "`n"
-})
+#Invoke-Expression (& {
+#    $hook = if ($PSVersionTable.PSVersion.Major -lt 6) { 'prompt' } else { 'pwd' }
+#    (zoxide init --hook $hook powershell) -join "`n"
+#})
+
+##
+# Difftastic integration with Git
+##
+if (Get-Command difft) {
+    $env:GIT_EXTERNAL_DIFF='difft'
+}
 
 # Environment variables for interactive use only
 $env:LESS='eFRX -i -G -M -X -s'
 $env:RIPGREP_CONFIG_PATH=(Join-Path $ThisFolder '_ripgreprc')
+
+# Interactive Python startup script
+$env:PYTHONSTARTUP=(Join-Path $ThisFolder '_pythonstartup')
+
+

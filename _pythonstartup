@@ -1,0 +1,25 @@
+# Set ipython prompt to ">>> " for easier copying
+try:
+    from IPython import get_ipython
+
+    get_ipython().run_line_magic("doctest_mode", "")
+    get_ipython().run_line_magic("load_ext", "ipython_autoimport")
+except:
+    pass
+
+# If I'm in a regular Python shell, at least activate tab completion
+try:
+    import readline
+
+    readline.parse_and_bind("tab: complete")
+except ImportError:
+    pass
+
+# if rich is installed, set the repr() to be pretty printted
+try:
+    from rich import pretty
+
+    pretty.install()
+except ImportError:
+    pass
+
