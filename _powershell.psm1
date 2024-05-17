@@ -88,6 +88,20 @@ function gvim()
     Start-Process -NoNewWindow "$($(Get-Command 'gvim.exe').Path)" $($args | Join-String -DoubleQuote -Separator ' ')
 }
 
+function frg {
+    # See: https://news.ycombinator.com/item?id=38471822
+    # Usage: frg "searchpattern"
+    $result = rg --ignore-case --color=always --line-number --no-heading @Args |
+      fzf --ansi `
+          --color 'hl:-1:underline,hl+:-1:underline:reverse' `
+          --delimiter ':' `
+          --preview "bat --color=always {1} --theme=zenburn --highlight-line {2}" `
+          --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
+    if ($result) {
+        & ($env:EDITOR).Trim("`"'") $result.Split(': ')[2]
+    }
+}
+
 Set-Alias -Name pd -Value Push-Location
 Set-Alias -Name po -Value Pop-Location
 

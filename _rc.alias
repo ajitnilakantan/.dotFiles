@@ -25,7 +25,20 @@ function w () { if [[ $* =~ [.] ]]; then w="$@"; else w="$@".com; fi; echo "$w";
 # function gitdiff() { git fetch origin ; git diff --name-only master origin/master; git diff @ '@{upstream}'; }
 function gitdiff() { git fetch; git diff   '@{upstream}'; echo '==='; git diff '@' '@{upstream}'; echo '===' }
 function camera_usage() { lsof | grep -i 'AppleCamera|iSight|VDC'; }
-
+function frg {
+    # See https://news.ycombinator.com/item?id=38471822
+    result=$(rg --ignore-case --color=always --line-number --no-heading "$@" |
+      fzf --ansi \
+          --color 'hl:-1:underline,hl+:-1:underline:reverse' \
+          --delimiter ':' \
+          --preview "bat --color=always {1} --theme='Solarized (light)' --highlight-line {2}" \
+          --preview-window 'up,60%,border-bottom,+{2}+3/3,~3')
+    file=${result%%:*}
+    linenumber=$(echo "${result}" | cut -d: -f2)
+    if [[ -n "$file" ]]; then
+        $EDITOR +"${linenumber}" "$file"
+    fi
+}
 
 # Environment variables for interactive use only
 export CLICOLOR=1
