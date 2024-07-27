@@ -90,4 +90,9 @@ scoop reset *
 ## MacOs setup
 ```sh
 git --version   # Will install xcode cli tools
+# Install homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# Install,  Brewfile created with: brew bundle dump --force
+brew bundle
+
 ```

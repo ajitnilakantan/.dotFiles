@@ -1,0 +1,12 @@
+tap "homebrew/bundle"
+tap "homebrew/core"
+tap "homebrew/services"
+brew "bat"
+brew "emacs"
+brew "fd"
+brew "ripgrep"
+brew "ripgrep-all"
+brew "sleepwatcher", restart_service: true
+cask "gstreamer-runtime"
+cask "libreoffice"
+cask "wine-stable"
