@@ -6,7 +6,9 @@ dotFiles repository
 
 # Usage
 In your home directory:
-git clone https://github.com/ajitnilakantan/.dotFiles.git
+```sh
+git clone git@github.com:ajitnilakantan/.dotFiles.git
+```
 
 # Set up dot files
 ## .vimrc
@@ -94,5 +96,5 @@ git --version   # Will install xcode cli tools
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 # Install,  Brewfile created with: brew bundle dump --force
 brew bundle
-
 ```
+
