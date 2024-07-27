@@ -234,6 +234,9 @@ nnoremap ;gg           G$g<C-G>''
 " comment on separate line
 nnoremap <silent> <CR> :noh<CR><CR>
 
+" Redirect change operations to the blackhole to avoid spoiling 'y' register content
+nnoremap c "_c
+nnoremap C "_C
 
 function! SynStack ()
     for i1 in synstack(line("."), col("."))
