@@ -19,8 +19,8 @@ let s:file_list = [
 \ "$HOME/.dotFiles/_vimrc",
 \ findfile('.dotFiles/_vimrc', fnamemodify($MYVIMRC, ':p:h')), ]
 :for filename in s:file_list
-  :if filereadable(filename)
-    :execute 'source '.filename
+  :if filereadable(expand(filename))
+    :execute 'source '.expand(filename)
     :break
   :endif
 :endfor

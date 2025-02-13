@@ -1,6 +1,10 @@
 emacs/custom.el
+emacs/backups/**
+emacs/ede-projects.el
 emacs/elpa/**
 emacs/history
+emacs/places
 emacs/projects
+emacs/recentf
 emacs/transient/**
 emacs/tree-sitter/**

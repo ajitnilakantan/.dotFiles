@@ -4,22 +4,25 @@
 "\ "$HOME/.dotFiles/_vimrc",
 "\ findfile('.dotFiles/_vimrc', fnamemodify($MYVIMRC, ':p:h')), ]
 ":for filename in s:file_list
-"  :if filereadable(filename)
-"    :execute 'source '.fnameescape(filename)
+"  :if filereadable(expand(filename))
+"    :execute 'source '.expand(filename)
 "    :break
 "  :endif
 ":endfor
 
 
-source $VIMRUNTIME/defaults.vim
+if !has('nvim')
+  source $VIMRUNTIME/defaults.vim
+endif
 
 " == Store backup, undo, and swap files in temp directory
+if !has('nvim')
 if has("win32")
   "Windows options here
   " :echom "Windows"
-  set backupdir=c:\\.Backups\\\\
-  set undodir=c:\\.Backups\\\\
-  set directory=c:\\.Backups\\swapfiles\\\\
+  set backupdir=c:/.Backups//
+  set undodir=c:/.Backups//
+  set directory=c:/.Backups/swapfiles//
 else
   if has("unix")
     let s:uname = system("uname")
@@ -45,6 +48,7 @@ else
         endif
     endif
   endif
+endif
 endif
 
 
@@ -228,6 +232,8 @@ nnoremap <S-Tab> <<
 inoremap <S-Tab> <C-d>
 " Show character count g-<C-G>
 nnoremap ;gg           G$g<C-G>''
+" nvim remaps Y to y$ which doesn't include the newline. Annoying.
+nnoremap Y Y
 
 " Clear search highlight
 " This unsets the "last search pattern" register by hitting return. Keep
