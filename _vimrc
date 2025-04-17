@@ -15,42 +15,6 @@ if !has('nvim')
   source $VIMRUNTIME/defaults.vim
 endif
 
-" == Store backup, undo, and swap files in temp directory
-if !has('nvim')
-if has("win32")
-  "Windows options here
-  " :echom "Windows"
-  set backupdir=c:/.Backups//
-  set undodir=c:/.Backups//
-  set directory=c:/.Backups/swapfiles//
-else
-  if has("unix")
-    let s:uname = system("uname")
-    let s:unamev = system("uname -v")
-    if s:unamev =~? ".*Microsoft.*"
-        " Windows 10 / Linux
-        set backupdir=/mnt/c/.Backups//
-        set undodir=/mnt/c/.Backups//
-        set directory=/mnt/c/.Backups/swapfiles//
-        set directory=/mnt/c/.Backups//
-        " :echom "Windows10 Linux"
-    elseif s:uname == "Darwin\n"
-        " Mac options here
-        " :echom "MacOs"
-        set mouse=v
-        set backupdir=~/.Backups//,/tmp
-        set undodir=~/.Backups//,/tmp
-        set directory=~/.Backups/swapfiles//,/tmp
-        set directory=~/.Backups//,/tmp
-        " Automatically create .backup directory, writable by the group.
-        if filewritable("~") && ! filewritable("~/.Backups")
-          silent execute '!umask 002; mkdir ~/.Backups'
-        endif
-    endif
-  endif
-endif
-endif
-
 
 " == Helper function
 function! s:mycapture(excmd) abort
@@ -95,6 +59,11 @@ if has('clipboard')
     else         " On mac and Windows, use * register for copy-paste
         set clipboard=unnamed
     endif
+endif
+
+if has('persistent_undo')            "check if your vim version supports
+  set undodir=$HOME/.cache/vim/undo  "directory where the undo files will be stored
+  set undofile                       "turn on the feature
 endif
 
 " == Searching
@@ -200,6 +169,10 @@ hi User8 guifg=#ffffff  guibg=#5b7fbb
 hi User9 guifg=#ffffff  guibg=#810085
 hi User0 guifg=#ffffff  guibg=#094afe
 
+
+" See https://stackoverflow.com/questions/5172323/how-to-properly-extend-a-highlighting-group-in-vim
+highlight lspInlayHintsType cterm=italic gui=italic
+
 " == Appearance
 if has('cmdline_info')
     set ruler                   " Show the ruler
@@ -243,6 +216,9 @@ nnoremap <silent> <CR> :noh<CR><CR>
 " Redirect change operations to the blackhole to avoid spoiling 'y' register content
 nnoremap c "_c
 nnoremap C "_C
+
+" Change Ctrl-G to display full path to file
+nnoremap <c-g> 1<c-g>
 
 function! SynStack ()
     for i1 in synstack(line("."), col("."))
@@ -294,3 +270,34 @@ Plug 'luochen1990/rainbow'
 call plug#end()
 let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
 
+" == LSP
+""" Run :PlugInstall
+call plug#begin(expand('~/.vim/plugged'))
+Plug 'prabirshrestha/vim-lsp'
+Plug 'mattn/vim-lsp-settings'
+Plug 'ionide/Ionide-vim'
+call plug#end()
+
+let g:lsp_diagnostics_enabled = 1
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    nmap <buffer> gd <plug>(lsp-definition)
+    nmap <buffer> gr <plug>(lsp-references)
+    nmap <buffer> K <plug>(lsp-hover)
+endfunction
+
+augroup lsp_install
+    au!
+    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
+
+
+" Enable LSP server during startup.
+let g:lsp_auto_enable = 1
+" Inlay hints.
+let g:lsp_inlay_hints_enabled = 1
+let g:lsp_inlay_hints_mode = { 'normal': ['always', '!curline'], 'insert': ['always', '!curline'],  }
+" Speeds up LSP
+let g:lsp_use_native_client = 1

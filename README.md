@@ -87,7 +87,7 @@ scoop config shim kiennq
 scoop reset *
 ```
 
-## MacOs setup
+## MacOS Setup
 ```sh
 git --version   # Will install xcode cli tools
 ```

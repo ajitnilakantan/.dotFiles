@@ -1,0 +1,503 @@
+;;; init.el --- Emacs configuration -*- lexical-binding: t -*-
+
+;;; Code:
+
+;; Timestamp message buffer
+(defun sh/current-time-microseconds ()
+  (let* ((nowtime (current-time))
+         (now-ms (nth 2 nowtime)))
+    (concat (format-time-string "[%Y-%m-%dT%T" nowtime) (format ".%d] " now-ms))))
+
+(defvar curtime (current-time))
+(defadvice message (before sh/advice-timestamp-messages activate compile)
+  (if (not (string-equal (ad-get-arg 0) "%s%s"))
+      (let ((deactivate-mark nil) (newtime nil))
+        (with-current-buffer "*Messages*"
+          (read-only-mode 0)
+          (goto-char (point-max))
+          (if (not (bolp))
+              (newline))
+          (setq newtime (current-time))
+          (insert (concat "[" (number-to-string (float-time (time-subtract newtime curtime))) "] "))
+          (setq curtime newtime)
+          (insert (sh/current-time-microseconds))))))
+
+;; Performance tweaks for modern machines
+(setq gc-cons-threshold 100000000) ; 100 mb
+(setq read-process-output-max (* 1024 1024)) ; 1mb
+
+;; Set the warning level
+(setq warning-minimum-level :error)
+
+;; Remove extra UI clutter by hiding the scrollbar, menubar, and toolbar.
+(menu-bar-mode 1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+
+;; Disable splash screen
+(setq inhibit-startup-screen t)
+
+;; ===================================
+;; Modeline
+;; ===================================
+(setq line-number-mode t)                        ; Show current line in modeline
+(setq column-number-mode t)                      ; Show column as well
+
+;; Add unique buffer names in the minibuffer where there are many
+;; identical files. This is super useful if you rely on folders for
+;; organization and have lots of files with the same name,
+;; e.g. foo/index.ts and bar/index.ts.
+(require 'uniquify)
+
+;; Automatically insert closing parens
+(electric-pair-mode t)
+
+;; Visualize matching parens
+(show-paren-mode 1)
+
+;; Prefer spaces to tabs
+(setq-default indent-tabs-mode nil)
+
+;; Automatically save your place in files
+(save-place-mode t)
+
+;; Save history in minibuffer to keep recent commands easily accessible
+(savehist-mode t)
+
+;; Keep track of open files
+; (recentf-mode t)
+
+;; Keep files up-to-date when they change outside Emacs
+(global-auto-revert-mode t)
+
+;; Display line numbers only when in programming modes
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+
+;; Completion https://lambdaland.org/posts/2024-12-14_emacs_catchup/
+(setopt enable-recursive-minibuffers t)
+(setopt completion-auto-help 'always)
+(setopt completions-max-height 20)
+(setopt completions-format 'one-column)
+(setopt completion-auto-select 'second-tab)
+
+(setopt tab-always-indent 'complete)
+(setopt completion-styles '(basic initials substring))
+
+(setopt dictionary-server "dict.org")
+
+
+;; The `setq' special form is used for setting variables. Remember
+;; that you can look up these variables with "C-h v variable-name".
+(setq uniquify-buffer-name-style 'forward
+      window-resize-pixelwise t
+      frame-resize-pixelwise t
+      load-prefer-newer t
+      backup-by-copying t
+      create-lockfiles nil ; Disable lock files
+      ;; Backups are placed into your Emacs directory, e.g. ~/.config/emacs/backups
+      backup-directory-alist `(("." . ,(concat user-emacs-directory "backups")))
+      ;; I'll add an extra note here since user customizations are important.
+      ;; Emacs actually offers a UI-based customization menu, "M-x customize".
+      ;; You can use this menu to change variable values across Emacs. By default,
+      ;; changing a variable will write to your init.el automatically, mixing
+      ;; your hand-written Emacs Lisp with automatically-generated Lisp from the
+      ;; customize menu. The following setting instead writes customizations to a
+      ;; separate file, custom.el, to keep your init.el clean.
+      custom-file (expand-file-name "custom.el" user-emacs-directory))
+
+;; Bring in package utilities so we can install packages from the web.
+
+;; path to custom libraries: this folder/lisp
+(add-to-list 'load-path (expand-file-name "lisp" (file-name-directory load-file-name)))
+
+;; Adds the Melpa archive to the list of available repositories
+(message "Begin package")
+(require 'use-package)
+(package-initialize)
+(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+;; Initializes the package infrastructure
+(message "Loaded package")
+
+;; Unless we've already fetched (and cached) the package archives,
+;; refresh them.
+;; If there are no archived package contents, refresh them
+(message "Begin package-refresh-contents")
+(when (not package-archive-contents) (package-refresh-contents))
+(message "Done package-refresh-contents")
+
+;; A quick primer on the `use-package' function (refer to
+;; "C-h f use-package" for the full details).
+;;
+;; (use-package my-package-name
+;;   :ensure t    ; Ensure my-package is installed
+;;   :after foo   ; Load my-package after foo is loaded (seldom used)
+;;   :init        ; Run this code before my-package is loaded
+;;   :bind        ; Bind these keys to these functions
+;;   :custom      ; Set these variables
+;;   :config      ; Run this code after my-package is loaded
+
+;; Load a custom theme
+(use-package nord-theme 
+  :ensure t
+  :load-path "themes"
+  :init
+  (setq nord-theme-kit t)
+  :config
+  (load-theme 'nord t)
+)
+
+(use-package emacs
+  :init
+  (tool-bar-mode -1)
+  (when scroll-bar-mode (scroll-bar-mode -1))
+  ;; Set the font. Note: height = px * 100
+  (set-face-attribute 'default nil :font "Consolas" :height 140)
+  ; (load-theme 'deeper-blue t)
+  (fido-vertical-mode)
+  :config
+  ;; Use whatever the default monospace font is
+  ; (setq font-use-system-font t)
+  (setq treesit-language-source-alist
+    '((ruby "https://github.com/tree-sitter/tree-sitter-ruby"))))
+
+
+;; Adds LSP support. Note that you must have the respective LSP
+;; server installed on your machine to use it with Eglot. e.g.
+;; rust-analyzer to use Eglot with `rust-mode'.
+(require 'eglot)
+(use-package eglot
+  :defer t
+  :ensure t
+  :bind (("s-<mouse-1>" . eglot-find-implementation)
+         ("C-c ." . eglot-code-action-quickfix))
+  :custom
+  (eglot-extend-to-xref t)              ; activate Eglot in referenced non-project files
+  (eglot-events-buffer-size 0)
+  (eglot-sync-connect nil)
+  (eglot-connect-timeout nil)
+  (eglot-autoshutdown t)
+  (eglot-send-changes-idle-time 3)
+  (flymake-no-changes-timeout 5)
+  ; (setq eglot-ignored-server-capabilities '( :documentHighlightProvider))
+  ;; Add your programming modes here to automatically start Eglot,
+  ;; assuming you have the respective LSP server installed.
+  :hook
+      (prog-mode . eglot-ensure)
+      (csharp-mode . eglot-ensure)
+      (csharp-ts-mode . eglot-ensure)
+      (fsharp-mode . eglot-ensure)
+      (fsharp-ts-mode . eglot-ensure)
+      (go-mode . eglot-ensure)
+      (go-ts-mode . eglot-ensure)
+      (python-mode . eglot-ensure)
+      (python-ts-mode . eglot-ensure)
+      (rust-mode . eglot-ensure)
+      (rust-ts-mode . eglot-ensure)
+      (web-mode . eglot-ensure)
+      (web-ts-mode . eglot-ensure)
+      (eglot-managed-mode . eglot-inlay-hints-mode)
+      ; (prog-mode . eglot-inlay-hints-mode)
+      ; (prog-mode . activate-inlays)
+  :init (setq eglot-stay-out-of '(flymake))
+  :config
+  (fset #'jsonrpc--log-event #'ignore)  ; massive perf boost---don't log every event
+  ;; You can configure additional LSP servers by modifying
+  ;; `eglot-server-programs'. The following tells eglot to use TypeScript
+  ;; language server when working in `web-mode'.
+  ;; Sometimes you need to tell Eglot where to find the language server
+  (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio")))
+  (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) . ("rust-analyzer" :initializationOptions (:check (:command "clippy")))))
+  (add-to-list 'eglot-server-programs '((fsharp-mode  fsharp-ts-mode) . ("fsautocomplete" )))
+  (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("pyright-langserver" "--stdio")))
+)
+
+;(use-package eldoc
+;  :init
+;  (global-eldoc-mode)
+;  :custom
+;  (eldoc-echo-area-use-multiline-p nil))
+
+(use-package flymake
+  :hook (prog-mode . flymake-mode)
+  :bind (:map flymake-mode-map
+        ("C-c ! n" . flymake-goto-next-error)
+        ("C-c ! p" . flymake-goto-prev-error)
+        ("C-c ! l" . flymake-show-buffer-diagnostics)))
+
+
+(use-package company
+  :ensure t
+  :commands (global-company-mode)
+  :init
+  (global-company-mode)
+  :custom
+  (company-tooltip-align-annotations 't)
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.1))
+
+;; Minibuffer completion is essential to your Emacs workflow and
+;; Vertico is currently one of the best out there. There's a lot to
+;; dive in here so I recommend checking out the documentation for more
+;; details: https://elpa.gnu.org/packages/vertico.html. The short and
+;; sweet of it is that you search for commands with "M-x do-thing" and
+;; the minibuffer will show you a filterable list of matches.
+;;(use-package vertico
+;;  :defer t
+;;  :ensure t
+;;  :custom
+;;  (vertico-cycle t)
+;;  (read-buffer-completion-ignore-case t)
+;;  (read-file-name-completion-ignore-case t)
+;;  (completion-styles '(basic substring partial-completion flex))
+;;  :init
+;;  (vertico-mode))
+
+;; Improve the accessibility of Emacs documentation by placing
+;; descriptions directly in your minibuffer. Give it a try:
+;; "M-x find-file".
+(use-package marginalia
+  :defer t
+  :after vertico
+  :ensure t
+  :init
+  (marginalia-mode))
+
+;; Adds intellisense-style code completion at point that works great
+;; with LSP via Eglot. You'll likely want to configure this one to
+;; match your editing preferences, there's no one-size-fits-all
+;; solution.
+;(use-package corfu
+;  :defer t
+;  :ensure t
+;  :init
+;  (corfu-global-mode)
+;  :custom
+;  (corfu-auto t)
+;  ;; You may want to play with delay/prefix/styles to suit your preferences.
+;  (corfu-auto-delay 0)
+;  (corfu-auto-prefix 0)
+;  (completion-styles '(basic)))
+
+
+;; Add extra context to Emacs documentation to help make it easier to
+;; search and understand. This configuration uses the keybindings 
+;; recommended by the package author.
+;;(use-package helpful
+;;  :defer t
+;;  :ensure t
+;;  :bind (("C-h f" . #'helpful-callable)
+;;         ("C-h v" . #'helpful-variable)
+;;         ("C-h k" . #'helpful-key)
+;;         ("C-c C-d" . #'helpful-at-point)
+;;         ("C-h F" . #'helpful-function)
+;;         ("C-h C" . #'helpful-command)))
+
+;; An extremely feature-rich git client. Activate it with "C-c g".
+;;(use-package magit
+;;  :defer t
+;;  :ensure t
+;;  :bind (("C-c g" . magit-status)))
+
+;; In addition to installing packages from the configured package
+;; registries, you can also install straight from version control
+;; with the :vc keyword argument. For the full list of supported
+;; fetchers, view the documentation for the variable
+;; `vc-use-package-fetchers'.
+;;
+;; Breadcrumb adds, well, breadcrumbs to the top of your open buffers
+;; and works great with project.el, the Emacs project manager.
+;;
+;; Read more about projects here:
+;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Projects.html
+(use-package breadcrumb
+  :defer t
+  :vc (:url "https://github.com/joaotavora/breadcrumb")
+  :init
+   (breadcrumb-mode)
+   (set-face-attribute 'mode-line-buffer-id nil :foreground "royal blue")
+)
+
+
+;; As you've probably noticed, Lisp has a lot of parentheses.
+;; Maintaining the syntactical correctness of these parentheses
+;; can be a pain when you're first getting started with Lisp,
+;; especially when you're fighting the urge to break up groups
+;; of closing parens into separate lines. Luckily we have
+;; Paredit, a package that maintains the structure of your
+;; parentheses for you. At first, Paredit might feel a little
+;; odd; you'll probably need to look at a tutorial (linked
+;; below) or read the docs before you can use it effectively.
+;; But once you pass that initial barrier you'll write Lisp
+;; code like it's second nature.
+;; http://danmidwood.com/content/2014/11/21/animated-paredit.html
+;; https://stackoverflow.com/a/5243421/3606440
+(use-package paredit
+  :defer t
+  :ensure t
+  :hook ((emacs-lisp-mode . enable-paredit-mode)
+         (lisp-mode . enable-paredit-mode)
+         (ielm-mode . enable-paredit-mode)
+         (lisp-interaction-mode . enable-paredit-mode)
+         (scheme-mode . enable-paredit-mode)))
+
+;; == Editorconfig
+(use-package editorconfig
+  :ensure nil
+  :config
+  (editorconfig-mode 1))
+
+;; == which-key
+(message "Begin which-key")
+(use-package which-key
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'after-init-hook #'which-key-mode))
+(message "Done which-key")
+
+;; rainbow-delimiters
+(message "Begin rainbow")
+(use-package rainbow-delimiters
+  :ensure t
+  :defer t
+  :init
+  :hook (prog-mode . rainbow-delimiters-mode))
+(message "Done rainbow")
+
+;; == highlight-indent-guides. See also: https://github.com/jdtsmith/indent-bars
+(message "Begin highlight-indent-guides")
+(use-package indent-bars
+  :ensure t
+  :defer t
+  :hook
+  (if window-system
+    ((fsharp-mode python-mode yaml-mode) . indent-bars-mode))
+)
+(message "Done highlight-indent-guides")
+
+(message "Begin programming modes")
+
+
+;;; This will try to use tree-sitter modes for many languages. Please run
+;;;
+;;;   M-x treesit-install-language-grammar
+;;;
+;;; Before trying to use a treesit mode.
+
+;; See: https://github.com/renzmann/treesit-auto
+(message "Begin treesit-auto")
+(use-package treesit-auto
+  :ensure t
+  :defer t
+  :vc (:url "https://github.com/renzmann/treesit-auto.git")
+  :custom
+  (treesit-auto-install t) ; Can be t or 'prompt
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
+(message "Done treesit-auto")
+
+;; Enabled inline static analysis
+(add-hook 'prog-mode-hook #'flymake-mode)
+
+;; Display messages when idle, without prompting
+; (setq help-at-pt-display-when-idle t)
+
+
+(use-package fsharp-mode
+  :defer t
+  :ensure t)
+(use-package eglot-fsharp    ; https://arialdomartini.github.io/emacs-fsharp
+  :defer t
+  :ensure t                  ; dotnet tool install --global fsautocomplete
+  :after fsharp-mode
+  :config
+  (setq eglot-fsharp-server-install-dir nil)
+)
+
+(use-package go-mode
+  :defer t
+  :ensure t
+  :bind (:map go-mode-map
+          ("C-c C-f" . 'gofmt))
+  :hook (before-save . gofmt-before-save))
+
+(use-package json-mode
+  :defer t
+  :ensure t)
+
+(use-package markdown-mode
+  :defer t
+  :ensure t
+  ;; These extra modes help clean up the Markdown editing experience.
+  ;; `visual-line-mode' turns on word wrap and helps editing commands
+  ;; work with paragraphs of text. `flyspell-mode' turns on an
+  ;; automatic spell checker.
+  :hook ((markdown-mode . visual-line-mode)
+         (markdown-mode . flyspell-mode))
+  :init
+  (setq markdown-command "multimarkdown")
+  :magic "\\.md\\'")
+
+(use-package powershell        ; https://github.com/jschaf/powershell.el
+  :defer t
+  :ensure t)
+
+(use-package rust-mode
+  :defer t
+  :ensure t
+  :bind (:map rust-mode-map
+          ("C-c C-r" . 'rust-run)
+          ("C-c C-c" . 'rust-compile)
+          ("C-c C-f" . 'rust-format-buffer)
+          ("C-c C-t" . 'rust-test))
+  :hook (rust-mode . prettify-symbols-mode))
+
+;; TypeScript, JS, and JSX/TSX support.
+(use-package web-mode
+  :defer t
+  :ensure t
+  :mode (("\\.ts\\'" . web-mode)
+         ("\\.js\\'" . web-mode)
+         ("\\.mjs\\'" . web-mode)
+         ("\\.tsx\\'" . web-mode)
+         ("\\.jsx\\'" . web-mode))
+  :custom
+  (web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
+  (web-mode-code-indent-offset 2)
+  (web-mode-css-indent-offset 2)
+  (web-mode-markup-indent-offset 2)
+  (web-mode-enable-auto-quoting nil))
+
+(message "Done programming modes")
+
+(message "Begin Keybindings")
+
+;; Highlight TODO, FIXME, etc
+(defun my/highlight-todo-like-words ()
+  "Highlight TODO like keywords."
+  (font-lock-add-keywords
+   nil `(("\\<\\(FIXME\\|TODO\\|BUG\\)" 1 font-lock-warning-face t)
+         ("\\<\\(NOTE\\|HACK\\)" 1 font-lock-doc-face t))))
+
+(add-hook 'prog-mode-hook 'my/highlight-todo-like-words)
+
+;; Previous window ^xp
+(defun select-previous-window ()
+  "Switch to the previous window"
+  (interactive)
+  (select-window (previous-window)))
+;; Next window ^xn
+(defun select-next-window ()
+  "Switch to the next window"
+  (interactive)
+  (select-window (next-window)))
+
+(global-set-key     [(control x) (p)]        'select-previous-window)
+(global-set-key     [(control x) (n)]        'select-next-window)
+(global-set-key     [(control x) (x)]        'bs-cycle-next)
+
+(message "Done Keybindings")
+
+(message (concat "Finished loading site-start in " (emacs-init-time) " seconds!!!"))
