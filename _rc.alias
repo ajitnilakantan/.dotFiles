@@ -1,7 +1,14 @@
 # Only in interactive shells
-ThisFolder="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+if [ -n "$BASH_VERSION" ]; then
+    ThisFolder="$(dirname "$BASH_SOURCE")"
+elif [ -n "$ZSH_VERSION" ]; then
+    ThisFolder="$(dirname "${(%):-%N}")"
+else
+    ThisFolder="~/.dotFiles"
+fi
 
 echo this=$ThisFolder
+
 function cls() { clear; }
 alias dev='cd ~/dev'
 function dir() { ls "$@"; }
@@ -20,7 +27,31 @@ function ff () { 2>/dev/null find -x . -name "$1" -print; }
 function ssh_cp_client() { scp "$1" "[${SSH_CLIENT% *}]":/tmp/; }
 
 
+# Whois helper
 function w () { if [[ $* =~ [.] ]]; then w="$@"; else w="$@".com; fi; echo "$w"; whois "$w" | grep "Expir"; }
+
+# Run nvim if available
+function vim () {
+    if type -a nvim > /dev/null 2>&1; then
+        command \nvim -u ~/.dotFiles/_vimrc "$@"
+    else
+        command \vim -u ~/.dotFiles/_vimrc "$@"
+    fi
+}
+
+function vi () {vim "$@"}
+
+function gvim () {
+    if type -a neovide > /dev/null 2>&1; then
+        \neovide --fork -- -u ~/.dotFiles/_vimrc "$@"
+    else
+        command \gvim -u ~/.dotFiles/_vimrc "$@"
+    fi
+}
+
+# Set init-directory for emacs
+function emacs () { command \emacs --init-directory ~/.dotFiles/emacs/ -nw "$@" }
+function emacsw () { command \emacs --init-directory ~/.dotFiles/emacs/ "$@" & disown }
 
 # function gitdiff() { git fetch origin ; git diff --name-only master origin/master; git diff @ '@{upstream}'; }
 function gitdiff() { git fetch; git diff   '@{upstream}'; echo '==='; git diff '@' '@{upstream}'; echo '===' }
@@ -45,3 +76,7 @@ export CLICOLOR=1
 export LESS='eFRX -i -G -M -X -s'
 export LSCOLORS=GxfxcxdxbxGgGdabagacad
 export RIPGREP_CONFIG_PATH="${ThisFolder}/_ripgreprc"
+export PATH="$HOME/.dotnet/tools:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.cargo/bin:$PATH"
+export INCLUDE="/opt/homebrew/include:$INCLUDE"

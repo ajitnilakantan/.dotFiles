@@ -1,16 +1,3 @@
-"" Add to ~/.vimrc
-"let s:file_list = [
-"\ "~/.dotFiles/_vimrc",
-"\ "$HOME/.dotFiles/_vimrc",
-"\ findfile('.dotFiles/_vimrc', fnamemodify($MYVIMRC, ':p:h')), ]
-":for filename in s:file_list
-"  :if filereadable(expand(filename))
-"    :execute 'source '.expand(filename)
-"    :break
-"  :endif
-":endfor
-
-
 if !has('nvim')
   source $VIMRUNTIME/defaults.vim
 endif
@@ -39,9 +26,20 @@ let g:remoteSession = ($STY == "")
 " == Plug Plugin
 " :execute 'source '.s:mypath.'/vim/autoload/plug.vim'
 
-" == Default font
+" == Default font.  Type :set guifont=*   to see available fonts
 if has("gui_running")
-    set guifont=Consolas:h16
+    if has("mac")
+        set guifont=Menlo:h16
+    else
+        set guifont=Consolas:h16
+    endif
+    let g:neovide_position_animation_length = 0
+    let g:neovide_cursor_animation_length = 0.00
+    let g:neovide_cursor_trail_size = 0
+    let g:neovide_cursor_animate_in_insert_mode = v:false
+    let g:neovide_cursor_animate_command_line = v:false
+    let g:neovide_scroll_animation_far_lines = 0
+    let g:neovide_scroll_animation_length = 0.00
 endif
 
 " == Basic See: https://www.tutorialdocs.com/article/vim-configuration.html
@@ -82,7 +80,6 @@ set scrolloff=3                 " Minimum lines to keep above and below cursor
 " == Formatting and Indentation
 set backspace=indent,eol,start  " Backspace for dummies
 set linespace=0                 " No extra spaces between rows
-set nowrap                      " Do not wrap long lines
 set autoindent                  " Indent at the same level of the previous line
 set shiftwidth=4                " Use indents of 4 spaces
 set expandtab                   " Tabs are spaces, not tabs
@@ -92,7 +89,7 @@ set nojoinspaces                " Prevents inserting two spaces after punctuatio
 set splitright                  " Puts new vsplit windows to the right of the current
 set splitbelow                  " Puts new split windows to the bottom of the current
 "set matchpairs+=<:>             " Match, to be used with %
-set pastetoggle=<F12>           " pastetoggle (sane indentation on pastes)
+"set pastetoggle=<F12>           " pastetoggle (sane indentation on pastes)
 set foldenable                  " Auto fold code
 set list
 set listchars=tab:›\ ,trail:•,extends:#,nbsp:. " Highlight problematic whitespace
@@ -116,6 +113,7 @@ set history=1000
 set autoread
 set wildmenu                    " Show list instead of just completing
 set wildmode=list:longest,full  " Command <Tab> completion, list matches, then longest common part, then all.
+set wrap                        " Wrap long lines
 set whichwrap=b,s,h,l,<,>,[,]   " Backspace and cursor keys wrap too
 set hidden                          " Allow buffer switching without saving
 set iskeyword-=.                    " '.' is an end of word designator
@@ -133,6 +131,7 @@ endif
 if has('gui_running')
     set guioptions-=T           " Remove the toolbar
     set lines=40                " 40 lines of text instead of 24
+    set mousescroll=ver:3,hor:0
 else
     if &term == 'xterm' || &term == 'screen' || &term == 'xterm-256color'
         set t_Co=256            " Enable 256 colors to stop the CSApprox warning and make xterm vim shine
@@ -151,7 +150,8 @@ if &term == 'xterm-256color'
     " Plug 'lifepillar/vim-solarized8'
     " call plug#end() " Run :PlugInstall to install
     if g:remoteSession
-        colorscheme slate
+        " colorscheme slate
+        colorscheme desert
     else
         colorscheme solarized8
     endif
@@ -159,15 +159,15 @@ else
     colorscheme darkblue
 endif
 
-hi User1 guifg=#ffdad8  guibg=#880c0e
-hi User2 guifg=#000000  guibg=#F4905C
-hi User3 guifg=#292b00  guibg=#f4f597
-hi User4 guifg=#112605  guibg=#aefe7B
-hi User5 guifg=#051d00  guibg=#7dcc7d
-hi User7 guifg=#ffffff  guibg=#880c0e gui=bold
-hi User8 guifg=#ffffff  guibg=#5b7fbb
-hi User9 guifg=#ffffff  guibg=#810085
-hi User0 guifg=#ffffff  guibg=#094afe
+" hi User1 guifg=#ffdad8  guibg=#880c0e
+" hi User2 guifg=#000000  guibg=#F4905C
+" hi User3 guifg=#292b00  guibg=#f4f597
+" hi User4 guifg=#112605  guibg=#aefe7B
+" hi User5 guifg=#051d00  guibg=#7dcc7d
+" hi User7 guifg=#ffffff  guibg=#880c0e gui=bold
+" hi User8 guifg=#ffffff  guibg=#5b7fbb
+" hi User9 guifg=#ffffff  guibg=#810085
+" hi User0 guifg=#ffffff  guibg=#094afe
 
 
 " See https://stackoverflow.com/questions/5172323/how-to-properly-extend-a-highlighting-group-in-vim
@@ -185,16 +185,17 @@ if has('statusline')
     set laststatus=2
 
     set statusline=
-    set statusline+=%7*\[%n]                                  "buffernr
-    set statusline+=%1*\ %<%F\                                "File+path
-    set statusline+=%2*\ %y\                                  "FileType
-    set statusline+=%3*\ %{''.(&fenc!=''?&fenc:&enc).''}      "Encoding
-    set statusline+=%3*\ %{(&bomb?\",BOM\":\"\")}\            "Encoding2
-    set statusline+=%4*\ %{&ff}\                              "FileFormat (dos/unix..) 
+    set statusline+=%7*\[%n]                              "buffernr
+    set statusline+=%1*\ %<%F\                            "File+path
+    set statusline+=%2*\ %y\                              "FileType
+    set statusline+=%3*\ %{''.(&fenc!=''?&fenc:&enc).''}  "Encoding
+    set statusline+=%3*\ %{(&bomb?\",BOM\":\"\")}\        "Encoding2
+    set statusline+=%4*\ %{&ff}\                          "FileFormat (dos/unix..) 
     set statusline+=%5*\ %{&spelllang}\ "Spellanguage
-    set statusline+=%8*\ %=\ row:%l/%L\ (%03p%%)\             "Rownumber/total (%)
-    set statusline+=%9*\ col:%03c\                            "Colnr
-    set statusline+=%0*\ \ %m%r%w\ %P\ \                      "Modified? Readonly? Top/bot.
+    set statusline+=%8*\ %=\ row:%l/%L\ (%03p%%)\         "Rownumber/total (%)
+    set statusline+=%9*\ col:%03c\                        "Colnr
+    set statusline+=%0*\ \ %m%r%w\ %P\ \                  "Modified? Readonly? Top/bot.
+    set statusline+=%o                                    "Character offset
 endif
 
 " == Misc shortcuts
@@ -213,13 +214,23 @@ nnoremap Y Y
 " comment on separate line
 nnoremap <silent> <CR> :noh<CR><CR>
 
-" Redirect change operations to the blackhole to avoid spoiling 'y' register content
+" Redirect change operations to the _ blackhole to avoid spoiling 'y' register content
 nnoremap c "_c
 nnoremap C "_C
+nnoremap s "_s
+nnoremap S "_S
 
 " Change Ctrl-G to display full path to file
 nnoremap <c-g> 1<c-g>
 
+" Command-Q --> Noop to avoid accidentally closing window
+nnoremap <D-q> <Nop>
+inoremap <D-q> <Nop>
+
+" Command-V --> Paste
+imap <D-v> :set paste<Enter>+:set nopaste<Enter>
+" Alternative
+" imap <D-V> "+p
 function! SynStack ()
     for i1 in synstack(line("."), col("."))
         let i2 = synIDtrans(i1)
@@ -229,6 +240,27 @@ function! SynStack ()
     endfor
 endfunction
 map gm :call SynStack()<CR>
+
+
+" For Emacs-style editing on the command-line:  :help emacs-keys
+" start of line
+:cnoremap <C-A> <Home>
+" back one character
+:cnoremap <C-B> <Left>
+" delete character under cursor
+:cnoremap <C-D> <Del>
+" end of line
+:cnoremap <C-E> <End>
+" forward one character
+:cnoremap <C-F> <Right>
+" recall newer command-line
+:cnoremap <C-N> <Down>
+" recall previous (older) command-line
+:cnoremap <C-P> <Up>
+" back one word
+:cnoremap <Esc><C-B> <S-Left>
+" forward one word
+:cnoremap <Esc><C-F> <S-Right>
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""

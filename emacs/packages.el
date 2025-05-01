@@ -18,25 +18,6 @@
         (eq system-type 'android))
     (setopt package-check-signature nil))
 
-;(use-package use-package
-;   :ensure nil
-;   :custom
-;   (use-package-always-ensure t)
-;   (package-native-compile t)
-;   (warning-minimum-level :error))
-
-; (require 'use-package) ; built-in package
-; (eval-and-compile ; Ensure values don't differ at compile time.
-;   (require 'use-package) ; built-in package
-; )
-; (package-initialize)
-
-;(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
-;(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
-; (setopt package-archives
-;         '(("gnu" . "https://elpa.gnu.org/packages/")
-;           ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-;           ("melpa" . "https://melpa.org/packages/")))
 (setq package-archives
       '(("gnu-elpa" . "https://elpa.gnu.org/packages/")
         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
@@ -49,8 +30,6 @@
         ("nongnu" . 1)))
 
 (package-initialize)
-;; Unless we've already fetched (and cached) the package archives,
-;; refresh them.
 ;; If there are no archived package contents, refresh them
 (unless package-archive-contents (package-refresh-contents))
 (require 'use-package) ; built-in package
@@ -88,17 +67,17 @@
 ;(setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
 ;      url-history-file (expand-file-name "url/history" user-emacs-directory))
 
-; (eval-and-compile ; Ensure values don't differ at compile time.
-;   (setq no-littering-etc-directory
-;         (expand-file-name "config/" user-emacs-directory))
-;   (setq no-littering-var-directory
-;         (expand-file-name "data/" user-emacs-directory))
-;   (setq no-littering-data-directory (expand-file-name "emacs/" (xdg-data-home)))
-;   (setq no-littering-config-directory (expand-file-name "emacs/" (xdg-config-home)))
-;   (setq no-littering-state-directory (expand-file-name "emacs/" (xdg-state-home)))
-;   (setq no-littering-cache-directory (expand-file-name "emacs/" (xdg-cache-home)))
-;   (setq no-littering-runtime-directory (expand-file-name "emacs/" (xdg-runtime-dir)))
-; )
+(eval-and-compile ; Ensure values don't differ at compile time.
+  (setq no-littering-etc-directory
+        (expand-file-name "emacs/" (xdg-cache-home)))
+  (setq no-littering-var-directory
+        (expand-file-name "emacs/" (xdg-cache-home)))
+  (setq no-littering-data-directory (expand-file-name "emacs/" (xdg-data-home)))
+  (setq no-littering-config-directory (expand-file-name "emacs/" (xdg-config-home)))
+  (setq no-littering-state-directory (expand-file-name "emacs/" (xdg-state-home)))
+  (setq no-littering-cache-directory (expand-file-name "emacs/" (xdg-cache-home)))
+  (setq no-littering-runtime-directory (expand-file-name "emacs/" (xdg-runtime-dir)))
+)
 
 (use-package no-littering               ; Keep .emacs.d clean
   :ensure t ; install

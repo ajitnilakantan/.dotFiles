@@ -31,6 +31,8 @@ bindkey '^[[1;5D' emacs-backward-word # Control left
 bindkey '[1;2C' forward-char # Shift right
 bindkey '[1;2D' backward-char # Shift left
 
+setopt interactivecomments
+
 # https://superuser.com/questions/49092/how-to-format-the-path-in-a-zsh-prompt
 setopt PROMPT_SUBST
 PROMPT='%n%f@%F{yellow}%m%f %B%~%b %# '
