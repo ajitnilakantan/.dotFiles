@@ -123,6 +123,10 @@
   ;                (funcall comment-line-break-function nil)
   ;                t)))
 
+  ;; Don't deselect on kill
+  (defun my/no-deactivate-mark (&rest _) (setq deactivate-mark nil))
+  (advice-add 'kill-ring-save :after #'my/no-deactivate-mark)
+
   ;; Remember positions
   (if (window-system)
     (progn
@@ -143,73 +147,73 @@
 
   ;; Bring to top
   (if (window-system) (progn (select-frame-set-input-focus (selected-frame))))
+  (setq mac-option-modifier 'meta)
+        ;supposedly setting this to 'nil gives them back to OS X, but that didn't work for me
+        (setq mac-command-modifier 'super)
+  (global-set-key (kbd "s-a") 'mark-whole-buffer)
 
   ;; Shortcuts
+  ;; Function to jump to the matching parenthesis. Bound to ESC Control-f
+  (defun my/match-paren (arg)
+    "Go to the matching parenthesis if on parenthesis otherwise insert %."
+    (interactive "p")
+    (cond ((looking-at "\\s\(") (forward-list 1) (backward-char 1))
+      ((looking-at "\\s\)") (forward-char 1) (backward-list 1))
+      (t (self-insert-command (or arg 1)))))
+
+  ;; Previous window ^xp
+  (defun my/select-previous-window ()
+    "Switch to the previous window"
+    (interactive)
+    (select-window (previous-window)))
+  ;; Next window ^xn
+  (defun my/select-next-window ()
+    "Switch to the next window"
+    (interactive)
+    (select-window (next-window)))
+  (defun my/keyboard-quit-dwim ()
+    "Do-What-I-Mean behaviour for a general `keyboard-quit'.
+     The generic `keyboard-quit' does not do the expected thing when
+     the minibuffer is open.  Whereas we want it to close the
+     minibuffer, even without explicitly focusing it.
+
+     The DWIM behaviour of this command is as follows:
+
+     - When the region is active, disable it.
+     - When a minibuffer is open, but not focused, close the minibuffer.
+     - When the Completions buffer is selected, close it.
+     - In every other case use the regular `keyboard-quit'."
+    (interactive)
+    (cond
+     ((region-active-p)
+      (keyboard-quit))
+     ((derived-mode-p 'completion-list-mode)
+      (delete-completion-window))
+     ((> (minibuffer-depth) 0)
+      (abort-recursive-edit))
+     (t
+      (keyboard-quit))))
   :bind (
-         ("C-c x r"  . (lambda () (interactive) (load-file user-init-file)))  ; reload init.el
-         ("C-x C-b"  . 'buffer-menu)  ; instead of list-buffers, replace current window
-         ("C-x n"    . (lambda () (interactive) (select-window (next-window))))  ; next window
-         ("C-x p"    . (lambda () (interactive) (select-window (previous-window))))  ; prev window
-         ("C-x x"    . 'bs-cycle-next)  ; cycle through buffers in current window
-         ("C-x C-v"  . 'find-file)
-         ("M-C-f"    . 'match-paren)  ; matching brackets
-         ("s-c"      . 'ns-copy-including-secondary)
-         ("s-w"      . 'ns-copy-including-secondary)
-         ("s-v"      . 'yank)
+	 ("<backtab>" . #'indent-relative)
+         ("C-."       . #'set-mark-command) ; set mark
+         ("C-c x r"   . (lambda () (interactive) (load-file user-init-file)))  ; reload init.el
+         ("C-g"       . #'my/keyboard-quit-dwim) ; cancel operation
+         ("C-x C-b"   . #'buffer-menu)  ; instead of list-buffers, replace current window
+         ("C-x n"     . (lambda () (interactive) (select-window (next-window))))  ; next window
+         ("C-x p"     . (lambda () (interactive) (select-window (previous-window))))  ; prev window
+         ("C-x x"     . #'bs-cycle-next)  ; cycle through buffers in current window
+         ("C-x C-v"   . #'find-file)
+         ("M-C-f"     . #'my/match-paren)  ; matching brackets
+	 ("M-["       . #'backward-sexp)
+	 ("M-]"       . #'forward-sexp)
+         ("s-a"       . #'mark-whole-buffer)
+         ("s-c"       . #'ns-copy-including-secondary)
+         ("s-w"       . #'ns-copy-including-secondary)
+         ("s-v"       . 'yank)
+         ("s-x"       . 'kill-region)
         )
 
 )
-
-;;;;; WHICH KEY
-(use-package which-key
-  :diminish which-key-mode
-  :custom
-  (which-key-add-column-padding 2)
-  (which-key-allow-multiple-replacements t)
-  (which-key-idle-delay 0.8)
-  (which-key-min-display-lines 6)
-  (which-key-mode t)
-  (which-key-side-window-slot -10))
-
-;;;;; Persist scratch buffer
-(use-package persistent-scratch
-  :after no-littering
-  :custom
-  (persistent-scratch-save-file (no-littering-expand-var-file-name "scratch"))
-  :config
-  (persistent-scratch-setup-default))
-
-;;;;; Save the place of the cursor in each file, and restore it upon opening it again.
-(use-package saveplace
-  :defer nil
-  :config
-    (save-place-mode))
-
-(defun my/keyboard-quit-dwim ()
-  "Do-What-I-Mean behaviour for a general `keyboard-quit'.
-
-The generic `keyboard-quit' does not do the expected thing when
-the minibuffer is open.  Whereas we want it to close the
-minibuffer, even without explicitly focusing it.
-
-The DWIM behaviour of this command is as follows:
-
-- When the region is active, disable it.
-- When a minibuffer is open, but not focused, close the minibuffer.
-- When the Completions buffer is selected, close it.
-- In every other case use the regular `keyboard-quit'."
-  (interactive)
-  (cond
-   ((region-active-p)
-    (keyboard-quit))
-   ((derived-mode-p 'completion-list-mode)
-    (delete-completion-window))
-   ((> (minibuffer-depth) 0)
-    (abort-recursive-edit))
-   (t
-    (keyboard-quit))))
-
-(define-key global-map (kbd "C-g") #'my/keyboard-quit-dwim)
 
 
 (let ((mono-spaced-font "Monospace")

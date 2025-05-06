@@ -19,15 +19,12 @@
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
 (use-package vertico
-  :ensure t
   :hook (after-init . vertico-mode))
 
 (use-package marginalia
-  :ensure t
   :hook (after-init . marginalia-mode))
 
 (use-package orderless
-  :ensure t
   :config
   (setq completion-styles '(orderless basic))
   (setq completion-category-defaults nil)
@@ -38,7 +35,6 @@
   :hook (after-init . savehist-mode))
 
 (use-package corfu
-  :ensure t
   :hook (after-init . global-corfu-mode)
   :bind (:map corfu-map ("<tab>" . corfu-complete))
   :config
@@ -54,7 +50,6 @@
     (corfu-history-mode 1)
     (add-to-list 'savehist-additional-variables 'corfu-history)))
 
-
 (use-package dired
   :ensure nil
   :commands (dired)
@@ -68,7 +63,6 @@
   (setq dired-dwim-target t))
 
 (use-package dired-subtree
-  :ensure t
   :after dired
   :bind
   ( :map dired-mode-map
@@ -80,11 +74,48 @@
   (setq dired-subtree-use-backgrounds nil))
 
 (use-package trashed
-  :ensure t
   :commands (trashed)
   :config
   (setq trashed-action-confirmer 'y-or-n-p)
   (setq trashed-use-header-line t)
   (setq trashed-sort-key '("Date deleted" . t))
   (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
+
+;; == Editorconfig
+(use-package editorconfig
+  :ensure nil
+  :config
+  (editorconfig-mode 1))
+
+;; == which-key
+(use-package which-key
+  :diminish which-key-mode
+  :custom
+  (which-key-add-column-padding 2)
+  (which-key-allow-multiple-replacements t)
+  (which-key-idle-delay 0.8)
+  (which-key-min-display-lines 6)
+  (which-key-mode t)
+  (which-key-side-window-slot -10))
+
+;; rainbow-delimiters
+(use-package rainbow-delimiters
+  :ensure t
+  :defer t
+  :init
+  :hook (prog-mode . rainbow-delimiters-mode))
+
+;; Persist scratch buffer
+(use-package persistent-scratch
+  :after no-littering
+  :custom
+  (persistent-scratch-save-file (no-littering-expand-var-file-name "scratch"))
+  :config
+  (persistent-scratch-setup-default))
+
+;; Save the place of the cursor in each file, and restore it upon opening it again.
+(use-package saveplace
+  :defer nil
+  :config
+    (save-place-mode))
 

@@ -13,18 +13,9 @@ function! s:mycapture(excmd) abort
   endtry
   return out
 endfunction
-let s:mypath = fnamemodify(resolve(expand('<sfile>:p')), ':h')
-
-"
-" == Add vim support folder
-"
-:execute 'set runtimepath+='.s:mypath.'/vim/'
 
 " Check if coming from ssh
 let g:remoteSession = ($STY == "")
-
-" == Plug Plugin
-" :execute 'source '.s:mypath.'/vim/autoload/plug.vim'
 
 " == Default font.  Type :set guifont=*   to see available fonts
 if has("gui_running")
@@ -69,7 +60,7 @@ set number                      " Line numbers on
 set showmatch                   " Show matching brackets/parenthesis
 set incsearch                   " Find as you type search
 set hlsearch                    " Highlight search terms
-set matchtime=20
+set matchtime=2
 set cpoptions+=x
 set winminheight=0              " Windows can be 0 line high
 set ignorecase                  " Case insensitive search
@@ -159,19 +150,11 @@ else
     colorscheme darkblue
 endif
 
-" hi User1 guifg=#ffdad8  guibg=#880c0e
-" hi User2 guifg=#000000  guibg=#F4905C
-" hi User3 guifg=#292b00  guibg=#f4f597
-" hi User4 guifg=#112605  guibg=#aefe7B
-" hi User5 guifg=#051d00  guibg=#7dcc7d
-" hi User7 guifg=#ffffff  guibg=#880c0e gui=bold
-" hi User8 guifg=#ffffff  guibg=#5b7fbb
-" hi User9 guifg=#ffffff  guibg=#810085
-" hi User0 guifg=#ffffff  guibg=#094afe
-
 
 " See https://stackoverflow.com/questions/5172323/how-to-properly-extend-a-highlighting-group-in-vim
 highlight lspInlayHintsType cterm=italic gui=italic
+highlight clear MatchParen
+highlight MatchParen        cterm=underline,bold gui=underline,bold
 
 " == Appearance
 if has('cmdline_info')
@@ -295,41 +278,82 @@ map <S-Down> <C-w><Down>
 map <S-Left> <C-w><Left>
 map <S-Right> <C-w><Right>
 
-" == Rainbow parentheses
-""" Run :PlugInstall
-call plug#begin(expand('~/.vim/plugged'))
-Plug 'luochen1990/rainbow'
-call plug#end()
-let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
 
 " == LSP
-""" Run :PlugInstall
-call plug#begin(expand('~/.vim/plugged'))
-Plug 'prabirshrestha/vim-lsp'
-Plug 'mattn/vim-lsp-settings'
-Plug 'ionide/Ionide-vim'
-call plug#end()
+if has('nvim')
+lua <<EOF
+  scriptFolder = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand('<sfile>:p')), ':h')
+  vim.opt.rtp:append(scriptFolder .. "/nvim/")
+  dofile(scriptFolder .. '/nvim/_init.lua')
+  vim.opt.rtp:append(scriptFolder .. "/nvim/")
+  dofile(scriptFolder .. '/nvim/_custom.lua')
+EOF
 
-let g:lsp_diagnostics_enabled = 1
+else
+  """ Run :PlugInstall
+  let s:mypath = fnamemodify(resolve(expand('<sfile>:p')), ':h')
+  :execute 'set runtimepath+='.s:mypath.'/vim/'
+  call plug#begin(expand('~/.vim/plugged'))
+  Plug 'luochen1990/rainbow'
+  Plug 'prabirshrestha/vim-lsp'
+  Plug 'mattn/vim-lsp-settings'
+  Plug 'ionide/Ionide-vim'
+  call plug#end()
 
-function! s:on_lsp_buffer_enabled() abort
-    setlocal omnifunc=lsp#complete
-    nmap <buffer> gd <plug>(lsp-definition)
-    nmap <buffer> gr <plug>(lsp-references)
-    nmap <buffer> K <plug>(lsp-hover)
-endfunction
+  let g:rainbow_active = 1 "set to 0 if you want to enable it later via :RainbowToggle
+  let g:lsp_diagnostics_enabled = 1
 
-augroup lsp_install
-    au!
-    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
-    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
-augroup END
+  function! s:on_lsp_buffer_enabled() abort
+      setlocal omnifunc=lsp#complete
+      nmap <buffer> gd <plug>(lsp-definition)
+      nmap <buffer> gr <plug>(lsp-references)
+      nmap <buffer> K <plug>(lsp-hover)
+  endfunction
+
+  augroup lsp_install
+      au!
+      " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+      autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+  augroup END
 
 
-" Enable LSP server during startup.
-let g:lsp_auto_enable = 1
-" Inlay hints.
-let g:lsp_inlay_hints_enabled = 1
-let g:lsp_inlay_hints_mode = { 'normal': ['always', '!curline'], 'insert': ['always', '!curline'],  }
-" Speeds up LSP
-let g:lsp_use_native_client = 1
+  " Enable LSP server during startup.
+  let g:lsp_auto_enable = 1
+  " Inlay hints.
+  let g:lsp_inlay_hints_enabled = 1
+  let g:lsp_inlay_hints_mode = { 'normal': ['always', '!curline'], 'insert': ['always', '!curline'],  }
+  " Speeds up LSP
+  let g:lsp_use_native_client = 1
+endif
+
+" You can embed vimscript in init.lua
+" vim.cmd [[
+"    " Example vimscript:
+"    set expandtab
+"    set smartindent
+"    set breakindent
+" 
+"    nnoremap <Leader>tn :tabnext<CR>
+" ]]
+
+" Insert nvim lua in vimrc with:
+" if has('nvim') | lua << EOF
+"   <snippet>
+" EOF
+" endif
+
+" Simple vimscripte to lua patterns
+" let g:global_var = 1
+" vim.g.global_var = 1
+" 
+" set     tabstop = 2
+" vim.opt.tabstop = 2
+" 
+" nmap                 <leader>w    <cmd>wa<cr>
+" vim.keymap.set('n', '<leader>w', '<cmd>wa<cr>')
+" Also,
+" local map = vim.keymap.set
+" 
+" map('n', '<leader>w', '<cmd>wa<cr>')
+" // more mappings ...
+

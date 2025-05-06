@@ -88,31 +88,10 @@
 ;; Basic editor configuration
 (my/load "emacs-config")
 
+;; Various usability addons
+(my/load "misc-addons")
+
 ;; Language modes
 (my/load "prog-modes")
-
-;; Visual addons
-(my/load "emacs-addons")
-
-;; Language modes
-;(my/load "syntax-highlighting")
-
-;; Linting
-;(my/load "syntax-checking")
-
-;; eglot
-;(my/load "lsp")
-
-;; completion framework
-;(my/load "completion")
-
-;; look and feel
-;(my/load "theme")
-
-;; look and feel
-;(my/load "file-management")
-
-;; look and feel
-;(my/load "minibuffer")
 
 (message (format "Finished loading site-start in %s seconds and %s garbage collections!!!" (emacs-init-time) gcs-done))

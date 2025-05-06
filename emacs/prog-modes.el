@@ -34,7 +34,7 @@
 
 (use-package python
   :config
-  (setq python-flymake-command '("ruff"))
+    (setq python-flymake-command '("ruff"))
   :hook
     (python-mode . highlight-indent-guides-mode)
 )
@@ -46,7 +46,7 @@
           ("C-c C-f" . 'rust-format-buffer)
           ("C-c C-t" . 'rust-test))
   :hook (rust-mode . prettify-symbols-mode)
-        ((rust-mode rust-ts-mode) . flymake-mode)
+        ; ((rust-mode rust-ts-mode) . flymake-mode)
 )
 
 (use-package web-mode
@@ -70,7 +70,7 @@
   :config
   (global-treesit-auto-mode))
 
-;;; FOLDING USING TREE SITTER
+;; FOLDING USING TREE SITTER
 (use-package treesit-fold
   :unless (eq system-type 'android) ; Doesn't work in android
   :init
@@ -120,38 +120,22 @@
   )
 )
 
-;; Bracket colorizer
-(use-package rainbow-mode
-  :hook (prog-mode yaml-mode xml-mode mhtml-mode))
-
-;; Colorful-mode preview and change color in-real-time
-(use-package colorful-mode
-  :diminish
-  :custom
-  (colorful-use-prefix t)
-  (colorful-only-strings 'only-prog)
-  (css-fontify-colors nil)
-  :config
-  (global-colorful-mode t)
-  (add-to-list 'global-colorful-modes 'helpful-mode))
-
-;; Pulse modified region
-(use-package goggles
-  :diminish
-  :hook ((prog-mode text-mode) . goggles-mode))
-
 ;; TODO Hightlight (Comment-tags)
 (use-package hl-todo
-  :hook ((prog-mode text-mode) . hl-todo-mode)
+  :hook
+    ((prog-mode text-mode) . hl-todo-mode)
   :config
-  (setq hl-todo-highlight-punctuation ":"
-        hl-todo-keyword-faces
-        `(("TODO"       warning bold)
-          ("FIXME"      error bold)
-          ("HACK"       font-lock-constant-face bold)
-          ("REVIEW"     font-lock-keyword-face bold)
-          ("NOTE"       success bold)
-          ("DEPRECATED" font-lock-doc-face bold))))
+    (setq hl-todo-highlight-punctuation ":"
+          hl-todo-keyword-faces
+          `(("TODO"       warning bold)
+            ("FIXME"      error bold)
+            ("HACK"       font-lock-constant-face bold)
+            ("REVIEW"     font-lock-keyword-face bold)
+            ("NOTE"       success bold)
+            ("DEPRECATED" font-lock-doc-face bold)))
+  ;:custom
+    ;(add-hook 'flymake-diagnostic-functions #'hl-todo-flymake nil t)
+)
 
 ;; ====================================
 ;; Flymake
@@ -182,7 +166,7 @@
         (flymake-show-buffer-diagnostics)))
 
     ;; Add the binding to the left margin
-    ; (define-key flymake-mode-map [left-margin mouse-1] #'flymake-show-diagnostic-at-point)
+    (define-key flymake-mode-map [left-margin mouse-1] #'flymake-show-diagnostic-at-point)
 )
 
 (use-package flymake
@@ -226,8 +210,15 @@
 ;; ====================================
 (defun manually-activate-flymake ()
   (require 'nerd-icons)
+  (defun my/ignore-errors (oldfun cmd &rest args)
+      (ignore-errors
+        (apply oldfun cmd args)))
+  (advice-add 'hl-todo-flymake :around 'my/ignore-errors)
   (add-hook 'flymake-diagnostic-functions #'eglot-flymake-backend nil t)
-  (flymake-mode 1))
+  (add-hook 'flymake-diagnostic-functions #'hl-todo-flymake nil t)
+  (flymake-mode 1)
+  (hl-todo-mode 1)
+)
 
 (use-package eglot
   :ensure nil ; built in package
@@ -241,7 +232,7 @@
     (eglot-autoshutdown t)
     (eglot-send-changes-idle-time 3)
     (flymake-no-changes-timeout 5)
-    (setq eglot-ignored-server-capabilities '(:inlayHintProvider))
+    ; (setq eglot-ignored-server-capabilities '(:inlayHintProvider))
     ; (setq eglot-ignored-server-capabilities '( :documentHighlightProvider))
 
   ;; Add your programming modes here to automatically start Eglot,
@@ -255,7 +246,7 @@
     ((web-mode web-ts-mode) . eglot-ensure)
     (eglot-managed-mode . manually-activate-flymake)
   :config
-    ; (eglot-inlay-hints-mode -1)
+    (eglot-inlay-hints-mode -1)  ; A bit intrusive
     (fset #'jsonrpc--log-event #'ignore)  ; massive perf boost---don't log every event
     (setq eglot-report-progress nil)  ; makes modeline flash less
     (add-to-list 'eglot-stay-out-of 'flymake)
@@ -286,6 +277,27 @@
         )
       )
     ))
+)
+
+(use-package eglot
+  :ensure nil ; built in package
+  :bind
+    ;; Fix mouse-3 button in eglot
+    (:map eglot-mode-map
+        ("<down-mouse-3>"
+         . (lambda (event)
+             (interactive "e")
+             (let* ((ec (event-start event))
+                    (choice (x-popup-menu event eglot-menu))
+                    (action (lookup-key eglot-menu (apply 'vector choice))))
+
+               (select-window (posn-window ec))
+               (goto-char (posn-point ec))
+               (cl-labels ((check (value) (not (null value))))
+                 (when choice
+                   (call-interactively action)))))))
+  :custom-face
+    (eglot-highlight-symbol-face ((t (:inherit (lazy-highlight)))))
 )
 
 ;; Eglot helpers
