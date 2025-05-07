@@ -24,13 +24,6 @@ if has("gui_running")
     else
         set guifont=Consolas:h16
     endif
-    let g:neovide_position_animation_length = 0
-    let g:neovide_cursor_animation_length = 0.00
-    let g:neovide_cursor_trail_size = 0
-    let g:neovide_cursor_animate_in_insert_mode = v:false
-    let g:neovide_cursor_animate_command_line = v:false
-    let g:neovide_scroll_animation_far_lines = 0
-    let g:neovide_scroll_animation_length = 0.00
 endif
 
 " == Basic See: https://www.tutorialdocs.com/article/vim-configuration.html
@@ -38,7 +31,6 @@ set encoding=utf-8
 set showmode                " Display the current mode
 set mouse=a                 " Automatically enable mouse usage
 set mousehide               " Hide the mouse cursor while typing
-" filetype indent on
 filetype plugin indent on   " Automatically detect file types.
 syntax on                   " Syntax highlighting
 
@@ -122,7 +114,6 @@ endif
 if has('gui_running')
     set guioptions-=T           " Remove the toolbar
     set lines=40                " 40 lines of text instead of 24
-    set mousescroll=ver:3,hor:0
 else
     if &term == 'xterm' || &term == 'screen' || &term == 'xterm-256color'
         set t_Co=256            " Enable 256 colors to stop the CSApprox warning and make xterm vim shine
@@ -135,20 +126,6 @@ endif
 " == colorscheme
 set background=dark
 
-if &term == 'xterm-256color'
-    " More pleasant color scheme when you ssh to macos from windows
-    " call plug#begin(expand('~/.vim/plugged'))
-    " Plug 'lifepillar/vim-solarized8'
-    " call plug#end() " Run :PlugInstall to install
-    if g:remoteSession
-        " colorscheme slate
-        colorscheme desert
-    else
-        colorscheme solarized8
-    endif
-else
-    colorscheme darkblue
-endif
 
 
 " See https://stackoverflow.com/questions/5172323/how-to-properly-extend-a-highlighting-group-in-vim
@@ -191,6 +168,9 @@ inoremap <S-Tab> <C-d>
 nnoremap ;gg           G$g<C-G>''
 " nvim remaps Y to y$ which doesn't include the newline. Annoying.
 nnoremap Y Y
+" Same with p and P
+nnoremap P P
+nnoremap p p
 
 " Clear search highlight
 " This unsets the "last search pattern" register by hitting return. Keep
@@ -283,13 +263,24 @@ map <S-Right> <C-w><Right>
 if has('nvim')
 lua <<EOF
   scriptFolder = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand('<sfile>:p')), ':h')
-  vim.opt.rtp:append(scriptFolder .. "/nvim/")
+  vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
   dofile(scriptFolder .. '/nvim/_init.lua')
-  vim.opt.rtp:append(scriptFolder .. "/nvim/")
+  vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
+  dofile(scriptFolder .. '/nvim/_lsp.lua')
   dofile(scriptFolder .. '/nvim/_custom.lua')
 EOF
 
 else
+  if &term == 'xterm-256color'
+    " More pleasant color scheme when you ssh to macos from windows
+    if g:remoteSession
+        colorscheme desert
+    else
+        colorscheme solarized8
+    endif
+  else
+    colorscheme darkblue
+  endif
   """ Run :PlugInstall
   let s:mypath = fnamemodify(resolve(expand('<sfile>:p')), ':h')
   :execute 'set runtimepath+='.s:mypath.'/vim/'

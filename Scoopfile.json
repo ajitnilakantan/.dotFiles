@@ -1,0 +1,366 @@
+{
+    "apps": [
+        {
+            "Name": "7zip",
+            "Info": "",
+            "Version": "24.09",
+            "Source": "main",
+            "Updated": "2024-12-06T16:39:59.6955548-08:00"
+        },
+        {
+            "Name": "audacity",
+            "Info": "",
+            "Version": "3.7.3",
+            "Source": "extras",
+            "Updated": "2025-05-06T12:54:02.9920036-07:00"
+        },
+        {
+            "Name": "cmake",
+            "Info": "",
+            "Version": "4.0.2",
+            "Source": "main",
+            "Updated": "2025-05-06T12:55:23.8028576-07:00"
+        },
+        {
+            "Name": "dark",
+            "Info": "",
+            "Version": "3.14.1",
+            "Source": "main",
+            "Updated": "2025-05-06T13:06:02.6368965-07:00"
+        },
+        {
+            "Name": "deno",
+            "Info": "",
+            "Version": "2.3.1",
+            "Source": "main",
+            "Updated": "2025-05-06T12:55:43.597356-07:00"
+        },
+        {
+            "Name": "dupeguru",
+            "Info": "",
+            "Version": "4.3.1",
+            "Source": "extras",
+            "Updated": "2023-02-22T08:04:07.6051789-08:00"
+        },
+        {
+            "Name": "emacs",
+            "Info": "",
+            "Version": "30.1",
+            "Source": "extras",
+            "Updated": "2025-02-24T16:18:29.6139552-08:00"
+        },
+        {
+            "Name": "exiftool",
+            "Info": "",
+            "Version": "13.29",
+            "Source": "main",
+            "Updated": "2025-05-06T12:55:54.7755831-07:00"
+        },
+        {
+            "Name": "fd",
+            "Info": "",
+            "Version": "10.2.0",
+            "Source": "main",
+            "Updated": "2024-12-06T16:43:08.5649873-08:00"
+        },
+        {
+            "Name": "ffmpeg",
+            "Info": "",
+            "Version": "7.1.1",
+            "Source": "main",
+            "Updated": "2025-05-06T12:57:16.6685708-07:00"
+        },
+        {
+            "Name": "fzf",
+            "Info": "",
+            "Version": "0.62.0",
+            "Source": "main",
+            "Updated": "2025-05-06T12:57:26.2415885-07:00"
+        },
+        {
+            "Name": "gcc",
+            "Info": "",
+            "Version": "13.2.0",
+            "Source": "main",
+            "Updated": "2024-05-04T10:50:00.830276-07:00"
+        },
+        {
+            "Name": "gh",
+            "Info": "",
+            "Version": "2.72.0",
+            "Source": "main",
+            "Updated": "2025-05-06T12:57:33.0954567-07:00"
+        },
+        {
+            "Name": "ghostscript",
+            "Info": "",
+            "Version": "10.05.1",
+            "Source": "main",
+            "Updated": "2025-05-06T12:58:00.0287083-07:00"
+        },
+        {
+            "Name": "ghostwriter",
+            "Info": "",
+            "Version": "2.1.6",
+            "Source": "extras",
+            "Updated": "2024-05-13T13:11:45.2647144-07:00"
+        },
+        {
+            "Name": "git",
+            "Info": "",
+            "Version": "2.49.0",
+            "Source": "main",
+            "Updated": "2025-05-06T12:59:03.8932233-07:00"
+        },
+        {
+            "Name": "go",
+            "Info": "",
+            "Version": "1.24.2",
+            "Source": "main",
+            "Updated": "2025-05-06T13:01:31.6489854-07:00"
+        },
+        {
+            "Name": "gsudo",
+            "Info": "",
+            "Version": "2.6.0",
+            "Source": "main",
+            "Updated": "2025-03-05T14:39:25.1965382-08:00"
+        },
+        {
+            "Name": "handbrake",
+            "Info": "",
+            "Version": "1.9.2",
+            "Source": "extras",
+            "Updated": "2025-02-24T16:19:59.5429776-08:00"
+        },
+        {
+            "Name": "handbrake-cli",
+            "Info": "",
+            "Version": "1.9.2",
+            "Source": "main",
+            "Updated": "2025-02-24T16:20:06.4627015-08:00"
+        },
+        {
+            "Name": "helix",
+            "Info": "",
+            "Version": "25.01.1",
+            "Source": "main",
+            "Updated": "2025-02-14T10:05:20.4603036-08:00"
+        },
+        {
+            "Name": "hxd",
+            "Info": "",
+            "Version": "2.5.0.0",
+            "Source": "extras",
+            "Updated": "2023-02-22T09:33:33.0260526-08:00"
+        },
+        {
+            "Name": "imagemagick",
+            "Info": "",
+            "Version": "7.1.1-47",
+            "Source": "main",
+            "Updated": "2025-05-06T13:02:13.8424969-07:00"
+        },
+        {
+            "Name": "innounp",
+            "Info": "",
+            "Version": "2.64.4",
+            "Source": "main",
+            "Updated": "2025-05-06T13:02:19.1129486-07:00"
+        },
+        {
+            "Name": "irfanview",
+            "Info": "",
+            "Version": "4.70",
+            "Source": "extras",
+            "Updated": "2025-02-24T18:45:30.6940608-08:00"
+        },
+        {
+            "Name": "latex",
+            "Info": "",
+            "Version": "24.1",
+            "Source": "main",
+            "Updated": "2024-05-04T10:56:54.3776687-07:00"
+        },
+        {
+            "Name": "less",
+            "Info": "",
+            "Version": "668",
+            "Source": "main",
+            "Updated": "2024-12-06T16:52:05.5919426-08:00"
+        },
+        {
+            "Name": "lessmsi",
+            "Info": "",
+            "Version": "2.7.0",
+            "Source": "main",
+            "Updated": "2025-03-05T14:39:29.2638737-08:00"
+        },
+        {
+            "Name": "llvm",
+            "Info": "",
+            "Version": "20.1.4",
+            "Source": "main",
+            "Updated": "2025-05-06T13:04:04.7941896-07:00"
+        },
+        {
+            "Name": "lua",
+            "Info": "",
+            "Version": "5.4.7-2",
+            "Source": "main",
+            "Updated": "2025-02-14T11:37:35.4225612-08:00"
+        },
+        {
+            "Name": "naps2",
+            "Info": "",
+            "Version": "8.1.4",
+            "Source": "extras",
+            "Updated": "2025-05-06T13:04:27.0798042-07:00"
+        },
+        {
+            "Name": "neovide",
+            "Info": "",
+            "Version": "0.15.0",
+            "Source": "extras",
+            "Updated": "2025-05-06T13:04:34.231983-07:00"
+        },
+        {
+            "Name": "neovim",
+            "Info": "",
+            "Version": "0.11.1",
+            "Source": "main",
+            "Updated": "2025-05-06T13:04:51.5668224-07:00"
+        },
+        {
+            "Name": "nodejs",
+            "Info": "",
+            "Version": "24.0.0",
+            "Source": "main",
+            "Updated": "2025-05-06T13:05:27.5455599-07:00"
+        },
+        {
+            "Name": "pandoc",
+            "Info": "",
+            "Version": "3.6.4",
+            "Source": "main",
+            "Updated": "2025-05-06T13:05:51.5629336-07:00"
+        },
+        {
+            "Name": "panwriter",
+            "Info": "",
+            "Version": "0.8.9",
+            "Source": "extras",
+            "Updated": "2025-02-12T16:28:51.5422666-08:00"
+        },
+        {
+            "Name": "poppler",
+            "Info": "",
+            "Version": "24.08.0-0",
+            "Source": "main",
+            "Updated": "2024-12-06T16:54:47.9076088-08:00"
+        },
+        {
+            "Name": "python",
+            "Info": "",
+            "Version": "3.13.3",
+            "Source": "main",
+            "Updated": "2025-05-06T13:07:11.9416081-07:00"
+        },
+        {
+            "Name": "raspberry-pi-imager",
+            "Info": "",
+            "Version": "1.9.0",
+            "Source": "extras",
+            "Updated": "2024-12-06T16:57:04.5347042-08:00"
+        },
+        {
+            "Name": "rga",
+            "Info": "",
+            "Version": "0.10.6",
+            "Source": "main",
+            "Updated": "2024-05-04T11:00:31.906336-07:00"
+        },
+        {
+            "Name": "ripgrep",
+            "Info": "",
+            "Version": "14.1.1",
+            "Source": "main",
+            "Updated": "2024-12-06T16:57:06.2738562-08:00"
+        },
+        {
+            "Name": "rufus",
+            "Info": "",
+            "Version": "4.7",
+            "Source": "extras",
+            "Updated": "2025-05-06T13:07:20.1088456-07:00"
+        },
+        {
+            "Name": "starship",
+            "Info": "",
+            "Version": "1.23.0",
+            "Source": "main",
+            "Updated": "2025-05-06T13:07:24.0450722-07:00"
+        },
+        {
+            "Name": "uv",
+            "Info": "",
+            "Version": "0.7.2",
+            "Source": "main",
+            "Updated": "2025-05-06T13:07:32.9357285-07:00"
+        },
+        {
+            "Name": "vim",
+            "Info": "",
+            "Version": "9.1.0",
+            "Source": "main",
+            "Updated": "2024-05-04T11:05:25.4493608-07:00"
+        },
+        {
+            "Name": "vlc",
+            "Info": "",
+            "Version": "3.0.21",
+            "Source": "extras",
+            "Updated": "2024-07-09T17:24:16.395411-07:00"
+        },
+        {
+            "Name": "vncviewer",
+            "Info": "",
+            "Version": "7.13.1",
+            "Source": "extras",
+            "Updated": "2024-12-17T09:15:51.4488666-08:00"
+        },
+        {
+            "Name": "winmerge",
+            "Info": "",
+            "Version": "2.16.48.2",
+            "Source": "extras",
+            "Updated": "2025-05-06T13:07:42.3425213-07:00"
+        }
+    ],
+    "buckets": [
+        {
+            "Name": "main",
+            "Source": "https://github.com/ScoopInstaller/Main",
+            "Updated": "2025-05-06T10:23:11-07:00",
+            "Manifests": 1385
+        },
+        {
+            "Name": "extras",
+            "Source": "https://github.com/lukesampson/scoop-extras",
+            "Updated": "2025-05-06T11:57:48-07:00",
+            "Manifests": 2159
+        },
+        {
+            "Name": "versions",
+            "Source": "https://github.com/ScoopInstaller/Versions",
+            "Updated": "2025-05-06T09:44:23-07:00",
+            "Manifests": 492
+        },
+        {
+            "Name": "scoop-misc",
+            "Source": "https://github.com/kiennq/scoop-misc",
+            "Updated": "2025-04-30T22:59:04-07:00",
+            "Manifests": 22
+        }
+    ]
+}

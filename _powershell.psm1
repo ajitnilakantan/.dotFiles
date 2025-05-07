@@ -83,9 +83,24 @@ function emacsw()
     Start-Process -NoNewWindow "$($(Get-Command 'emacs.exe').Path)" $("--init-directory",$local:emacsinit,$args | Join-String -DoubleQuote -Separator ' ')
 }
 
+function vim()
+{
+    $local:rcfile = (Join-Path $ThisFolder '_vimrc')
+    if (Get-Command "nvim.exe" -ErrorAction Ignore) {
+        Start-Process -NoNewWindow -Wait "$($(Get-Command 'nvim.exe').Path)" $("-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
+    } else {
+        Start-Process -NoNewWindow -Wait "$($(Get-Command 'vim.exe').Path)" $("-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
+    }
+}
+function vi() {vim $args}
 function gvim()
 {
-    Start-Process -NoNewWindow "$($(Get-Command 'gvim.exe').Path)" $($args | Join-String -DoubleQuote -Separator ' ')
+    $local:rcfile = (Join-Path $ThisFolder '_vimrc')
+    if (Get-Command "neovide.exe" -ErrorAction Ignore) {
+        Start-Process -NoNewWindow "$($(Get-Command 'neovide.exe').Path)" $("--fork","--","-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
+    } else {
+        Start-Process -NoNewWindow "$($(Get-Command 'gvim.exe').Path)" $("-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
+    }
 }
 
 function frg {
@@ -122,7 +137,7 @@ If (Test-Path Alias:ls) {Remove-Item Alias:ls}
 ##
 # Difftastic integration with Git
 ##
-if (Get-Command difft) {
+if (Get-Command difft -ErrorAction Ignore) {
     $env:GIT_EXTERNAL_DIFF='difft'
 }
 

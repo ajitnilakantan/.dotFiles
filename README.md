@@ -64,8 +64,9 @@ scoop reset *
 ```pwsh
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
-#scoop export -c > ~/.dotFiles/Scoopfile.json
+# scoop export | Out-File ~/.dotFiles/Scoopfile.json
 scoop import ~/.dotFiles/Scoopfile.json
+scoop cleanup *
 ```
 
 ## MacOS Setup
