@@ -52,7 +52,7 @@ set number                      " Line numbers on
 set showmatch                   " Show matching brackets/parenthesis
 set incsearch                   " Find as you type search
 set hlsearch                    " Highlight search terms
-set matchtime=2
+set matchtime=0
 set cpoptions+=x
 set winminheight=0              " Windows can be 0 line high
 set ignorecase                  " Case insensitive search
