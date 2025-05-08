@@ -1,14 +1,14 @@
 if vim.fn.has("mac") == 1 then
-    if vim.fn.has("gui_running") == 0 then
-        vim.o.termguicolors = false
-        vim.cmd.colorscheme("gruvbox")
-    end
+	if vim.fn.has("gui_running") == 0 then
+		vim.o.termguicolors = false
+		vim.cmd.colorscheme("gruvbox")
+	end
 end
 
 if vim.fn.has("windows") == 1 then
-    if vim.fn.has("gui_running") == 0 then
-        vim.cmd.colorscheme("darkblue")
-    end
+	if vim.fn.has("gui_running") == 0 then
+		vim.cmd.colorscheme("darkblue")
+	end
 end
 
 -- Make matchParen less intrusive
@@ -34,15 +34,16 @@ vim.o.mousescroll = "ver:3,hor:0"
 local builtin = require("telescope.builtin")
 
 local hoverfn = function()
-    vim.lsp.buf.hover({
-        border = "rounded",
-    })
+	vim.lsp.buf.hover({
+		border = "rounded",
+	})
 end
 local toggleInlays = function()
-    vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
 end
 
-Util = require("_util")
+local scriptFolder = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand("<sfile>:p")), ":h")
+local Util = dofile(scriptFolder .. "/nvim/_util.lua")
 
 vim.keymap.set("n", "<leader>c", builtin.colorscheme, { desc = "Telescope colorscheme" })
 vim.keymap.set("n", "<leader><space>", "<Right>", { desc = "Forward" })
@@ -50,14 +51,14 @@ vim.keymap.set("n", "<leader>k", hoverfn, { desc = "HoverInfo" })
 vim.keymap.set("n", "K", hoverfn, { desc = "HoverInfo" })
 vim.keymap.set("n", "<leader>i", toggleInlays, { desc = "Toggle inlay hints" })
 vim.keymap.set("n", "<Esc>", function()
-    Util.close_floats()
-    if vim.bo.modifiable then
-        Util.clear_highlights()
-    else
-        if #vim.api.nvim_list_wins() > 1 then
-            return Util.feedkeys("<C-w>c")
-        end
-    end
+	Util.close_floats()
+	if vim.bo.modifiable then
+		Util.clear_highlights()
+	else
+		if #vim.api.nvim_list_wins() > 1 then
+			return Util.feedkeys("<C-w>c")
+		end
+	end
 end, { desc = "Close floats, clear highlights" })
 
 vim.lsp.enable("fsharp_fsautocomplete")

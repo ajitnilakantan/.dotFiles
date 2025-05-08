@@ -267,6 +267,7 @@ lua <<EOF
   dofile(scriptFolder .. '/nvim/_init.lua')
   vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
   dofile(scriptFolder .. '/nvim/_lsp.lua')
+  vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
   dofile(scriptFolder .. '/nvim/_custom.lua')
 EOF
 
