@@ -1,14 +1,14 @@
 if vim.fn.has("mac") == 1 then
-	if vim.fn.has("gui_running") == 0 then
-		vim.o.termguicolors = false
-		vim.cmd.colorscheme("gruvbox")
-	end
+    if vim.fn.has("gui_running") == 0 then
+        vim.o.termguicolors = false
+        vim.cmd.colorscheme("gruvbox")
+    end
 end
 
 if vim.fn.has("windows") == 1 then
-	if vim.fn.has("gui_running") == 0 then
-		vim.cmd.colorscheme("darkblue")
-	end
+    if vim.fn.has("gui_running") == 0 then
+        vim.cmd.colorscheme("darkblue")
+    end
 end
 
 -- Make matchParen less intrusive
@@ -30,16 +30,23 @@ vim.g.neovide_scroll_animation_far_lines = 0
 vim.g.neovide_scroll_animation_length = 0.0
 vim.o.mousescroll = "ver:3,hor:0"
 
+-- Blink cursor
+vim.opt.guicursor = {
+    "n-v-c:block-Cursor/lCursor-blinkwait1000-blinkon100-blinkoff100",
+    "i-ci:ver25-Cursor/lCursor-blinkwait1000-blinkon100-blinkoff100",
+    "r:hor50-Cursor/lCursor-blinkwait100-blinkon100-blinkoff100",
+}
+
 -- keymaps
 local builtin = require("telescope.builtin")
 
 local hoverfn = function()
-	vim.lsp.buf.hover({
-		border = "rounded",
-	})
+    vim.lsp.buf.hover({
+        border = "rounded",
+    })
 end
 local toggleInlays = function()
-	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+    vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
 end
 
 local scriptFolder = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand("<sfile>:p")), ":h")
@@ -51,14 +58,14 @@ vim.keymap.set("n", "<leader>k", hoverfn, { desc = "HoverInfo" })
 vim.keymap.set("n", "K", hoverfn, { desc = "HoverInfo" })
 vim.keymap.set("n", "<leader>i", toggleInlays, { desc = "Toggle inlay hints" })
 vim.keymap.set("n", "<Esc>", function()
-	Util.close_floats()
-	if vim.bo.modifiable then
-		Util.clear_highlights()
-	else
-		if #vim.api.nvim_list_wins() > 1 then
-			return Util.feedkeys("<C-w>c")
-		end
-	end
+    Util.close_floats()
+    if vim.bo.modifiable then
+        Util.clear_highlights()
+    else
+        if #vim.api.nvim_list_wins() > 1 then
+            return Util.feedkeys("<C-w>c")
+        end
+    end
 end, { desc = "Close floats, clear highlights" })
 
 vim.lsp.enable("fsharp_fsautocomplete")

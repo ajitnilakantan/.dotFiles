@@ -76,7 +76,7 @@ git --version          # Will install xcode cli tools
 
 # Install brew
 # Brewfile created with:
-# brew bundle dump --force --file=Brewfile
+#   brew bundle dump --force --file=Brewfile
 brew bundle install --file=~/.dotFiles/Brewfile
 
 # Brew diagnostics.   Follow instructions if any for brew link etc.
@@ -89,6 +89,10 @@ rustup component add rustc cargo rustfmt rust-std rust-analyzer clippy rust-src 
 
 # LSP tool for F#
 dotnet tool install --global fsautocomplete
+
+# Terminal theme
+#   Import ~/.dotFiles/_MacOSTerminalTheme.terminal into Terminal.app
+
 ```
 
 
