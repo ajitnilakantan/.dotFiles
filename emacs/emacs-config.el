@@ -4,46 +4,19 @@
 (use-package emacs
   :ensure nil ; built-in package
   :hook
-  ((prog-mode text-mode conf-mode help-mode)
-   . visual-wrap-prefix-mode)
+  ((prog-mode text-mode conf-mode help-mode) . visual-wrap-prefix-mode)
   ((prog-mode text-mode conf-mode) . display-line-numbers-mode)
   :custom
   (undo-limit 80000000) ;; ⚠️👀
-  (safe-local-variable-values
-   '((eval remove-hook 'flymake-diagnostic-functions
-           'elisp-flymake-checkdoc t)))
 
-  (x-gtk-show-hidden-files t)
-  (mouse-drag-and-drop-region t)
-  (mouse-drag-and-drop-region-cross-program t)
-
-  (show-paren-predicate
-   '(not
-     (or (derived-mode . special-mode) (major-mode . text-mode)
-         (derived-mode . hexl-mode))))
-  (show-paren-style 'parenthesis)
-  (show-paren-when-point-inside-paren t)
+  ; (show-paren-when-point-inside-paren t)
 
   (delete-selection-mode t)
   (cursor-type 'bar)
   (context-menu-mode t)
 
-  ;(truncate-lines t)
-
   ;; Exit message
   (confirm-kill-emacs nil)
-
-  ;; No Undo Redos
-  (undo-no-redo t)
-
-  ;;; IMAGE
-  (image-animate-loop t)
-
-  ;; Only text-mode on new buffers
-  (initial-major-mode 'text-mode)
-
-  ;; Delete just 1 char (including tabs)
-  (backward-delete-char-untabify-method nil)
 
   ;; Disable Welcome Screen
   (inhibit-startup-screen t)
@@ -68,12 +41,6 @@
   :config
   ;; Alias
   (defalias 'yes-or-no-p 'y-or-n-p)
-  ;; y-or-n-p with return
-  ; (advice-add 'y-or-n-p :around
-  ;             (lambda (orig-func &rest args)
-  ;               (let ((query-replace-map (copy-keymap query-replace-map)))
-  ;                 (keymap-set query-replace-map "<return>" 'act)
-  ;                 (apply orig-func args))))
 
   ;; Menu-bar
   (menu-bar-mode t)
@@ -94,34 +61,30 @@
   (unless (eq system-type 'windows-nt)
     (set-selection-coding-system 'utf-8))
 
-  ;; Enable line numbers and pairs if buffer/file is writable
-  (advice-add #'fundamental-mode :after (lambda (&rest _)
-                                          (unless buffer-read-only
-                                            (display-line-numbers-mode)
-                                            (electric-pair-mode))))
-  ;; Kill Scratch Buffer
-  ;(if (get-buffer "*scratch*")
-  ;    (kill-buffer "*scratch*"))
+  ; set up unicode symbols (order matters!)
+  (set-fontset-font
+   t
+   'emoji
+   (cond
+    ((member "Apple Color Emoji" (font-family-list)) "Apple Color Emoji")
+    ((member "Noto Color Emoji" (font-family-list)) "Noto Color Emoji")
+    ((member "Noto Emoji" (font-family-list)) "Noto Emoji")
+    ((member "Segoe UI Emoji" (font-family-list)) "Segoe UI Emoji")  ; 🧗
+    ((member "Symbola" (font-family-list)) "Symbola")))
+  (set-fontset-font
+   t
+   'symbol
+   (cond
+    ((member "Segoe UI Symbol" (font-family-list)) "Segoe UI Symbol")
+    ((member "Apple Symbols" (font-family-list)) "Apple Symbols")
+    ((member "Symbola" (font-family-list)) "Symbola")))
+  ; nice on windows...
+  (cond
+    ((eq system-type 'windows-nt)
+     (set-fontset-font t '(#x1F300 . #x1F5FF) "Segoe UI Symbol")))  ; 🔁, Miscellaneous Symbols and Pictographs
 
   ;; Alt Left-right-up-down to switch windows
   (windmove-default-keybindings 'meta)
-
-  ;; Fix Cases region commands
-  ;; Use at your own risk.
-  (put 'upcase-region     'disabled nil)
-  (put 'downcase-region   'disabled nil)
-  (put 'capitalize-region 'disabled nil)
-
-  ;; Continue Comments.
-  ;(setopt comment-multi-line t)
-  ;(advice-add 'newline-and-indent :before-until
-  ;            (lambda (&rest _)
-  ;              (interactive "*")
-  ;              (when-let (((nth 4 (syntax-ppss (point))))
-  ;                         ((functionp comment-line-break-function))
-  ;                         (fill-prefix " *"))
-  ;                (funcall comment-line-break-function nil)
-  ;                t)))
 
   ;; Don't deselect on kill
   (defun my/no-deactivate-mark (&rest _) (setq deactivate-mark nil))
@@ -141,16 +104,19 @@
 
   ;; wider margins
   (setq-default left-margin-width 3 right-margin-width 0)
+  (setq left-margin-width 3 right-margin-width 0)
+  (set-window-buffer nil (current-buffer))
+
+  ;; integrate copy/paste with X
+  (setq select-enable-clipboard t
+        select-enable-primary t
+        save-interprogram-paste-before-kill t)
 
   ;; Tab-bar-mode
   (tab-bar-mode t)
 
   ;; Bring to top
   (if (window-system) (progn (select-frame-set-input-focus (selected-frame))))
-  (setq mac-option-modifier 'meta)
-        ;supposedly setting this to 'nil gives them back to OS X, but that didn't work for me
-        (setq mac-command-modifier 'super)
-  (global-set-key (kbd "s-a") 'mark-whole-buffer)
 
   ;; Shortcuts
   ;; Function to jump to the matching parenthesis. Bound to ESC Control-f
@@ -215,9 +181,46 @@
 
 )
 
+(use-package emacs
+  :config
+  (setopt enable-recursive-minibuffers t)                ; Use the minibuffer whilst in the minibuffer
+;  (setopt completion-cycle-threshold 1)                  ; TAB cycles candidates
+;  (setopt completions-detailed t)                        ; Show annotations
+;  ; (setopt tab-always-indent 'complete)                   ; When I hit TAB, try to complete, otherwise, indent
+;  ; (setopt completion-styles '(basic initials substring)) ; Different styles to match input to candidates
+;
+;  (setopt completion-auto-help 'always)                  ; Open completion always; `lazy' another option
+;  (setopt completions-max-height 20)                     ; This is arbitrary
+;  (setopt completions-format 'one-column)
+;  (setopt completions-group t)
+;  (setopt completion-auto-select 'second-tab)            ; Much more eager
+;  ;(setopt completion-auto-select t)                     ; See `C-h v completion-auto-select' for more possible values
 
-(let ((mono-spaced-font "Monospace")
-      (proportionately-spaced-font "Sans"))
-  (set-face-attribute 'default nil :family mono-spaced-font :height 160)
-  (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0)
-  (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0))
+  (keymap-set minibuffer-mode-map "TAB" 'minibuffer-complete) ; TAB acts more like how it does in the shell
+
+  ;; Mode line information
+  (setopt line-number-mode t)                        ; Show current line in modeline
+  (setopt column-number-mode t)                      ; Show column as well
+
+  (setopt show-trailing-whitespace nil)      ; By default, don't underline trailing spaces
+  (setopt indicate-buffer-boundaries 'left)  ; Show buffer top and bottom in the margin
+
+  ;; Misc. UI tweaks
+  (blink-cursor-mode -1)                                ; Steady cursor
+  (pixel-scroll-precision-mode)                         ; Smooth scrolling
+
+  ;; Use common keystrokes by default
+  (cua-mode)
+
+  ;; Display line numbers in programming mode
+  (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+  (setopt display-line-numbers-width 3)           ; Set a minimum width
+
+  ;; Nice line wrapping when working with text
+  (add-hook 'text-mode-hook 'visual-line-mode)
+
+  ;; Show the tab-bar as soon as tab-bar functions are invoked
+  (setopt tab-bar-show 1)
+
+)
+

@@ -28,37 +28,6 @@ FILE=~/.dotFiles/_zshrc; [ -f $FILE ] && source $FILE; unset FILE
 #
 ```
 
-
-## Git setup
-```bash
-git config --global user.name "Full Name"
-git config --global user.email "name@email.com"
-
-git config --global pull.rebase true
-git config --global fetch.prune true
-git config --global diff.colorMoved zebra
-git config --global color.ui true
-#git config --global core.editor vi
-```
-
-git-wip installed from https://github.com/bartman/git-wip
-
-Useful commands:
-- `git wip` _#Create new commit on the wip/topic branch (creating it if needed)_
-- `git wip save "description"` _#Allows for a custom commit message_
-- `git wip log` _#Show the list of the work that leads upto the last WIP commit. This is similar to invoking:_ `git log --stat wip/$branch...$(git merge-base wip/$branch $branch)`
-- `git push . :wip/BRANCHNAME` _#Delete wips_
-
-
-
-<!--
-## Scoop setup (Windows)
-See: https://github.com/ScoopInstaller/Scoop/issues/1606
-```sh
-scoop config shim kiennq
-scoop reset *
-```
--->
 ## Windows setup
 - Install scoop
 ```pwsh
@@ -94,5 +63,29 @@ dotnet tool install --global fsautocomplete
 #   Import ~/.dotFiles/_MacOSTerminalTheme.terminal into Terminal.app
 
 ```
+
+
+## Git setup
+```bash
+git config --global user.name "Full Name"
+git config --global user.email "name@email.com"
+
+git config --global pull.rebase true
+git config --global fetch.prune true
+git config --global diff.colorMoved zebra
+git config --global color.ui true
+#git config --global core.editor vi
+
+git config --global merge.squash true
+git config --global alias.adog "log --all --decorate --oneline --graph"
+```
+
+git-wip installed from https://github.com/bartman/git-wip
+
+Useful commands:
+- `git wip` _#Create new commit on the wip/topic branch (creating it if needed)_
+- `git wip save "description"` _#Allows for a custom commit message_
+- `git wip log` _#Show the list of the work that leads upto the last WIP commit. This is similar to invoking:_ `git log --stat wip/$branch...$(git merge-base wip/$branch $branch)`
+- `git push . :wip/BRANCHNAME` _#Delete wips_
 
 

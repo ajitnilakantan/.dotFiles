@@ -34,6 +34,14 @@
 (unless package-archive-contents (package-refresh-contents))
 (require 'use-package) ; built-in package
 
+(use-package auto-package-update
+   :ensure t
+   :config
+   ; Packages will be updated every 4 days, and the old packages will be removed
+   (setq auto-package-update-delete-old-versions t
+         auto-package-update-interval 4)
+   (auto-package-update-maybe))
+
 ;; Automatically install/uninstall packages
 ;(package-install-selected-packages)
 ;(package-autoremove)

@@ -81,17 +81,6 @@
                                     (garbage-collect)
                                     (setq gc-cons-threshold my/gc-cons-threshold)))
 
-;;(defvar file-name-handler-alist-old file-name-handler-alist)
-;(setq file-name-handler-alist nil)
-;(setq gc-cons-threshold 100000000)
-;(setq read-process-output-max 10000000)
-;(setq bidi-inhibit-bpa t)
-;(add-hook 'emacs-startup-hook
-          ;(lambda ()
-            ;(setopt gc-cons-threshold 1073741824
-                    ;gc-cons-percentage 0.6
-                    ;file-name-handler-alist file-name-handler-alist-old)))
-
 
 (provide 'early-init)
 

@@ -51,7 +51,7 @@ function ff()
 
 function tldr([string]$cmd)
 {
-    & curl.exe -s "https://raw.githubusercontent.com/tldr-pages/tldr/master/pages/common/$($cmd).md" | & bat.exe --language md --style plain
+    & curl.exe -s "https://raw.githubusercontent.com/tldr-pages/tldr/master/pages/common/$($cmd).md" | & glow.exe --pager -
 }
 
 function time([string]$cmd)
@@ -92,7 +92,9 @@ function vim()
         Start-Process -NoNewWindow -Wait "$($(Get-Command 'vim.exe').Path)" $("-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
     }
 }
-function vi() {vim $args}
+
+function vi() {vim @args}
+
 function gvim()
 {
     $local:rcfile = (Join-Path $ThisFolder '_vimrc')
@@ -143,6 +145,7 @@ if (Get-Command difft -ErrorAction Ignore) {
 
 # Environment variables for interactive use only
 $env:LESS='eFRX -i -G -M -X -s'
+$env:PAGER='less -+e -+E -i -G -M -X -s'
 $env:RIPGREP_CONFIG_PATH=(Join-Path $ThisFolder '_ripgreprc')
 
 # Interactive Python startup script

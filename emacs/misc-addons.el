@@ -18,74 +18,105 @@
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
-(use-package vertico
-  :hook (after-init . vertico-mode))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;   Minibuffer completion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(use-package marginalia
-  :hook (after-init . marginalia-mode))
+;; Vertico: better vertical completion for minibuffer commands
+(use-package vertico
+  :config
+  (setopt
+    vertico-mode t
+    vertico-mouse-mode t
+    vertico-cycle t)
+  :init
+  ;; You'll want to make sure that e.g. fido-mode isn't enabled
+  (vertico-mode))
+
 
 (use-package orderless
+  :after vertico
   :config
-  (setq completion-styles '(orderless basic))
-  (setq completion-category-defaults nil)
-  (setq completion-category-overrides nil))
+  (setopt
+     completion-styles '(orderless basic)
+     completion-category-defaults nil
+     completion-category-overrides '((file (styles partial-completion))))
+)
 
-(use-package savehist
-  :ensure nil ; it is built-in
-  :hook (after-init . savehist-mode))
 
+;; Marginalia: annotations for minibuffer
+(use-package marginalia
+  :config
+  (keymap-set minibuffer-local-map "M-A" 'marginalia-cycle)
+  (marginalia-mode)
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;   Buffer completion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; == Corfu
 (use-package corfu
-  :hook (after-init . global-corfu-mode)
-  :bind (:map corfu-map ("<tab>" . corfu-complete))
-  :config
-  (setq tab-always-indent 'complete)
-  (setq corfu-preview-current nil)
-  (setq corfu-min-width 20)
+    :custom
+    (corfu-cycle t)                 ; Allows cycling through candidates
+    (corfu-auto t)                  ; Enable auto completion
+    (corfu-auto-prefix 2)
+    (corfu-auto-delay 0.1)
+    (corfu-popupinfo-delay '(0.4 . 0.2))
+    (corfu-preview-current 'insert) ; Do not preview current candidate
+    (corfu-preselect-first nil)
+    (corfu-on-exact-match nil)      ; Don't auto expand tempel snippets
+    (corfu-quit-at-boundary nil)    ; enable orderless style completion
 
-  (setq corfu-popupinfo-delay '(1.25 . 0.5))
-  (corfu-popupinfo-mode 1) ; shows documentation after `corfu-popupinfo-delay'
+    :bind (:map corfu-map
+                ("M-SPC"      . corfu-insert-separator)
+                ("TAB"        . corfu-next)
+                ([tab]        . corfu-next)
+                ("S-TAB"      . corfu-previous)
+                ([backtab]    . corfu-previous)
+                ("S-<return>" . nil) ;; leave my entry as it is
+                ("RET"        . corfu-insert))
 
-  ;; Sort by input history (no need to modify `corfu-sort-function').
-  (with-eval-after-load 'savehist
-    (corfu-history-mode 1)
-    (add-to-list 'savehist-additional-variables 'corfu-history)))
+    :init
+       (global-corfu-mode)
+       (corfu-history-mode)
+       (corfu-popupinfo-mode) ; Popup completion info
+)
 
-(use-package dired
-  :ensure nil
-  :commands (dired)
+(use-package corfu-terminal
+  :unless (display-graphic-p)
+  :after corfu
+  :init (corfu-terminal-mode +1))
+
+(use-package cape
   :hook
-  ((dired-mode . dired-hide-details-mode)
-   (dired-mode . hl-line-mode))
+  (eglot-managed-mode . (lambda ()
+                          (setq-local completion-at-point-functions
+                                      (list (cape-capf-super
+                                             #'eglot-completion-at-point
+                                             ; #'tempel-complete
+                                            )
+                                            t))))
   :config
-  (setq dired-recursive-copies 'always)
-  (setq dired-recursive-deletes 'always)
-  (setq delete-by-moving-to-trash t)
-  (setq dired-dwim-target t))
+  (add-to-list 'completion-at-point-functions
+               (cape-capf-super
+                #'cape-file
+                (cape-capf-prefix-length #'cape-dabbrev 3)))
+  (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+  (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible))
 
-(use-package dired-subtree
-  :after dired
-  :bind
-  ( :map dired-mode-map
-    ("<tab>" . dired-subtree-toggle)
-    ("TAB" . dired-subtree-toggle)
-    ("<backtab>" . dired-subtree-remove)
-    ("S-TAB" . dired-subtree-remove))
-  :config
-  (setq dired-subtree-use-backgrounds nil))
-
-(use-package trashed
-  :commands (trashed)
-  :config
-  (setq trashed-action-confirmer 'y-or-n-p)
-  (setq trashed-use-header-line t)
-  (setq trashed-sort-key '("Date deleted" . t))
-  (setq trashed-date-format "%Y-%m-%d %H:%M:%S"))
 
 ;; == Editorconfig
 (use-package editorconfig
   :ensure nil
   :config
   (editorconfig-mode 1))
+
+;; A tree plugin like NerdTree for Vim
+(use-package neotree
+  :ensure t
+  :custom (neo-theme (if (display-graphic-p) 'nerd-icons 'arrow))
+  :bind (("<f8>"       . #'neotree-toggle))
+)
 
 ;; == which-key
 (use-package which-key
@@ -95,8 +126,12 @@
   (which-key-allow-multiple-replacements t)
   (which-key-idle-delay 0.8)
   (which-key-min-display-lines 6)
-  (which-key-mode t)
-  (which-key-side-window-slot -10))
+  (which-key-max-description-length 80)
+  (which-key-side-window-slot -10)
+  :init
+  (which-key-setup-side-window-right-bottom)
+  :hook
+  (after-init . which-key-mode))
 
 ;; rainbow-delimiters
 (use-package rainbow-delimiters
@@ -115,7 +150,22 @@
 
 ;; Save the place of the cursor in each file, and restore it upon opening it again.
 (use-package saveplace
+  :ensure nil ; builtin
+  :after no-littering
   :defer nil
+  :custom
+  (save-place-file (no-littering-expand-var-file-name "saveplace"))
   :config
-    (save-place-mode))
-
+    (save-place-mode)
+)
+;; save recent files
+(use-package recentf
+  :ensure nil ; builtin
+  :after no-littering
+  :config
+  (setq recentf-save-file (no-littering-expand-var-file-name "recentf")
+        recentf-max-saved-items 500
+        recentf-max-menu-items 15
+        ;; disable recentf-cleanup on Emacs start, because it can cause
+        ;; problems with remote files
+        recentf-auto-cleanup 'never))

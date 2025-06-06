@@ -29,25 +29,10 @@
             (insert (format-time-string "[%T.%3N] ")))))))) ; Add %F for ymd
 (advice-add 'message :before 'my/ad-timestamp-message)
 
-;; Timestamp message buffer
-;(defun my/current-time-microseconds ()
-;  (let* ((nowtime (current-time))
-;         (now-ms (nth 2 nowtime)))
-;    (concat (format-time-string "[%Y-%m-%dT%T" nowtime) (format ".%d] " now-ms))))
-;
-;(defvar curtime (current-time))
-;(defadvice message (before my/advice-timestamp-messages activate compile)
-;  (if (not (string-equal (ad-get-arg 0) "%s%s"))
-;      (let ((deactivate-mark nil) (newtime nil))
-;        (with-current-buffer "*Messages*"
-;          (read-only-mode 0)
-;          (goto-char (point-max))
-;          (if (not (bolp))
-;              (newline))
-;          (setq newtime (current-time))
-;          (insert (concat "[" (number-to-string (float-time (time-subtract newtime curtime))) "] "))
-;          (setq curtime newtime)
-;          (insert (my/current-time-microseconds))))))
+;; Make native compilation silent and prune its cache.
+(when (native-comp-available-p)
+  (setq native-comp-async-report-warnings-errors 'silent) ; Emacs 28 with native compilation
+  (setq native-compile-prune-cache t)) ; Emacs 29
 
 (add-hook 'after-load-functions
   (defun my/after-load-package-name-h (file)
@@ -64,8 +49,13 @@
 (when (eq system-type 'windows-nt)
   (setenv "HOME" (getenv "UserProfile")));;; Store customization file in separate file
 
+(let ((mono-spaced-font "Monospace")
+      (proportionately-spaced-font "Sans"))
+  (set-face-attribute 'default nil :family mono-spaced-font :height 160)
+  (set-face-attribute 'fixed-pitch nil :family mono-spaced-font :height 1.0)
+  (set-face-attribute 'variable-pitch nil :family proportionately-spaced-font :height 1.0))
 ;; (Optional)
-(setopt custom-file "~/.config/emacs/custom.el")
+(setq custom-file "~/.config/emacs/custom.el")
 (load custom-file :no-error-if-file-is-missing)
 
 ;; Disable theme on Terminal and enable Mouse Support

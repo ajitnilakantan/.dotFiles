@@ -1,13 +1,11 @@
-;;; prog-modes.el --- Emacs configuration -*- lexical-binding: t -*-
+;; -*- coding: utf-8; lexical-binding: t; -*-
 
 ;; ====================================
 ;; Development Language Setup
 ;; ====================================
 
 
-(use-package fsharp-mode
-  :hook (fsharp-mode . highlight-indent-guides-mode)
-)
+(use-package fsharp-mode)
 
 (use-package go-mode
   :bind (:map go-mode-map
@@ -35,8 +33,6 @@
 (use-package python
   :config
     (setq python-flymake-command '("ruff"))
-  :hook
-    (python-mode . highlight-indent-guides-mode)
 )
 
 (use-package rust-mode
@@ -46,7 +42,6 @@
           ("C-c C-f" . 'rust-format-buffer)
           ("C-c C-t" . 'rust-test))
   :hook (rust-mode . prettify-symbols-mode)
-        ; ((rust-mode rust-ts-mode) . flymake-mode)
 )
 
 (use-package web-mode
@@ -67,7 +62,13 @@
 ;; TreeSitter setup
 ;; ====================================
 (use-package treesit-auto
+  :ensure t
+  :defer t
+  :vc (:url "https://github.com/renzmann/treesit-auto.git")
+  :custom
+  (treesit-auto-install t) ; Can be t or 'prompt
   :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
   (global-treesit-auto-mode))
 
 ;; FOLDING USING TREE SITTER
@@ -86,7 +87,6 @@
 )
 
 (use-package treesit-fold-indicators :ensure nil
-  :unless (eq system-type 'android)
   :if (display-graphic-p)
   ;; :custom
   ;; (treesit-fold-indicators-priority 50)
@@ -101,22 +101,23 @@
 ;; ====================================
 ;; OTHER HIGHLIGHTING
 ;; ====================================
-
 (use-package highlight-indent-guides
   :init
+  (add-hook 'prog-mode-hook #'(lambda () (highlight-indent-guides-mode)))
+  (add-hook 'text-mode-hook #'(lambda () (highlight-indent-guides-mode)))
   :config
-  (set-face-background 'highlight-indent-guides-odd-face "darkgray")
-  (set-face-background 'highlight-indent-guides-even-face "dimgray")
-  (set-face-foreground 'highlight-indent-guides-character-face "dimgray")
+  (setq highlight-indent-guides-auto-odd-face-perc 25)
+  (setq highlight-indent-guides-auto-even-face-perc 25)
+  (setq highlight-indent-guides-auto-character-face-perc 30)
   (if window-system
-      (progn
-        (setq highlight-indent-guides-method 'bitmap)
-        (setq highlight-indent-guides-responsive 'top)
-        (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-line))
-      (progn
-        (setq highlight-indent-guides-method 'column)
-        (setq highlight-indent-guides-auto-enabled nil)
-        (setq highlight-indent-guides-responsive 'top))
+    (progn
+      (setq highlight-indent-guides-method 'bitmap)
+      (setq highlight-indent-guides-responsive 'top)
+      (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-line))
+    (progn
+      (setq highlight-indent-guides-method 'column)
+      (setq highlight-indent-guides-auto-enabled nil)
+      (setq highlight-indent-guides-responsive nil))
   )
 )
 
@@ -133,16 +134,15 @@
             ("REVIEW"     font-lock-keyword-face bold)
             ("NOTE"       success bold)
             ("DEPRECATED" font-lock-doc-face bold)))
-  ;:custom
-    ;(add-hook 'flymake-diagnostic-functions #'hl-todo-flymake nil t)
 )
 
 ;; ====================================
 ;; Flymake
 ;; ====================================
+(use-package nerd-icons)
+
 (use-package flymake
   :ensure nil ; builtin
-  :unless (eq system-type 'android) ; DOESN'T WORK ON ANDROID
   :after nerd-icons
   :bind
     (:map flymake-mode-map
@@ -153,6 +153,7 @@
     (prog-mode . flymake-mode)
     (sh-base-mode . flymake-mode)
   :config
+    (setq help-at-pt-display-when-idle t) ; Display messages when idle, without prompting
     (setq flymake-autoresize-margins t)
     ; ShellCheck
     (setq-default sh-shellcheck-arguments "-x") ; follow sourced libraries
@@ -167,43 +168,45 @@
 
     ;; Add the binding to the left margin
     (define-key flymake-mode-map [left-margin mouse-1] #'flymake-show-diagnostic-at-point)
+
+    ;; More Spaces for the Error List Row
+    (setf (cadr (aref flymake--diagnostics-base-tabulated-list-format 2)) 10)
+
+    ;; Fix margin indicators when whitespace is enabled
+    (advice-add #'flymake--indicator-overlay-spec
+      :filter-return
+      (lambda (indicator) (concat indicator (propertize " " 'face 'default 'display `((margin left-margin) (space :width 5))))))
 )
 
+
+;; Customize icons
 (use-package flymake
   :ensure nil ; builtin
+  :if (display-graphic-p)
   :after nerd-icons
   :config
     (put 'flymake-error 'flymake-margin-string (alist-get 'error flymake-margin-indicators-string))
     (put 'flymake-warning 'flymake-margin-string (alist-get 'warning flymake-margin-indicators-string))
     (put 'flymake-note 'flymake-margin-string (alist-get 'note flymake-margin-indicators-string))
-    ;;
-    (keymap-set-after (default-value 'flymake-menu) "<list-project-problems>"
-      '(menu-item "List all Project Problems" flymake-show-project-diagnostics)
-      'List\ all\ problems)
-    ;; More Spaces for the Error List Row
-    (setf (cadr (aref flymake--diagnostics-base-tabulated-list-format 2)) 10)
-    ;; Fix margin indicators when whitespace is enabled
-    (advice-add #'flymake--indicator-overlay-spec :filter-return
-      (lambda (indicator)
-        (concat indicator
-            (propertize " "
-                        'face 'default
-                        'display `((margin left-margin)
-                        (space :width 5))))))
-
+    ; Keep flymake window at the bottom
+    (add-to-list 'display-buffer-alist
+      '((derived-mode . flymake-diagnostics-buffer-mode)
+         (display-buffer-reuse-window display-buffer-at-bottom)
+         (window-height . 0.25)
+         (dedicated . t)
+         (preserve-size . (t . t))))
   :custom
     (flymake-indicator-type 'margins)
     (flymake-margin-indicators-string
-     `((error "⛔" compilation-error)
-       (warning "😧" compilation-warning)
-       (note "🟢" compilation-info)))
+      `((error ,(nerd-icons-faicon "nf-fa-remove_sign") compilation-error)
+        (warning ,(nerd-icons-faicon "nf-fa-warning") compilation-warning)
+        (note ,(nerd-icons-faicon "nf-fa-circle_info") compilation-info)))
   :hook
     ;; Make the font in the problems buffer smaller, so that more is visible
     ((flymake-diagnostics-buffer-mode
       flymake-project-diagnostics-mode)
-      . (lambda () (if (display-graphic-p) (text-scale-decrease 1))))
+      . (lambda () (if (display-graphic-p) (text-scale-decrease 1.25))))
 )
-
 
 ;; ====================================
 ;; Eglot
@@ -214,10 +217,12 @@
       (ignore-errors
         (apply oldfun cmd args)))
   (advice-add 'hl-todo-flymake :around 'my/ignore-errors)
+  (advice-add 'eglot--hover-info :around 'my/ignore-errors)
   (add-hook 'flymake-diagnostic-functions #'eglot-flymake-backend nil t)
   (add-hook 'flymake-diagnostic-functions #'hl-todo-flymake nil t)
   (flymake-mode 1)
   (hl-todo-mode 1)
+  (eglot-inlay-hints-mode -1)  ; A bit intrusive
 )
 
 (use-package eglot
@@ -225,15 +230,39 @@
   :bind (("s-<mouse-1>" . eglot-find-implementation)
          ("C-c ." . eglot-code-action-quickfix))
   :custom
-    (eglot-extend-to-xref t)              ; activate Eglot in referenced non-project files
-    (eglot-events-buffer-size 0) ; disable events logging, it should be enabled only when debuggigng LSP servers
-    (eglot-sync-connect-nil 0) ; disable UI freeze when opening big files
-    (eglot-connect-timeout nil) ; never timeout
+    (eglot-extend-to-xref t)     ; activate Eglot in referenced non-project files
+    (eglot-events-buffer-size 0) ; disable events logging, it should be enabled only when debugging LSP servers
+    (eglot-sync-connect-nil 0)   ; disable UI freeze when opening big files
+    (eglot-connect-timeout nil)  ; never timeout
     (eglot-autoshutdown t)
     (eglot-send-changes-idle-time 3)
     (flymake-no-changes-timeout 5)
-    ; (setq eglot-ignored-server-capabilities '(:inlayHintProvider))
-    ; (setq eglot-ignored-server-capabilities '( :documentHighlightProvider))
+    (setq eglot-ignored-server-capabilities
+        ;; the things we actually want are uncommented here. Weird
+        ;; way to do it, but ok.
+      '(;:hoverProvider ;(provides async type info, would like this to be manual)
+        ;:completionProvider ; (provides company with completions)
+        ;:signatureHelpProvider ; (eldoc integration, unsure entirely what it does)
+        ;:definitionProvider ; (M-. jump to definition)
+        ;:typeDefinitionProvider
+        ;:implementationProvider
+        ;:declarationProvider
+        ;:referencesProvider
+        :documentHighlightProvider
+        :documentSymbolProvider
+        :workspaceSymbolProvider
+        :codeActionProvider ; (quickfix is useful, e.g. import type at point)
+        :codeLensProvider
+        :documentFormattingProvider
+        :documentRangeFormattingProvider
+        :documentOnTypeFormattingProvider
+        ;:renameProvider
+        ;:documentLinkProvider
+        :colorProvider
+        :foldingRangeProvider
+        :executeCommandProvider
+        :inlayHintProvider))
+
 
   ;; Add your programming modes here to automatically start Eglot,
   ;; assuming you have the respective LSP server installed.
@@ -245,6 +274,7 @@
     ((rust-mode rust-ts-mode) . eglot-ensure)
     ((web-mode web-ts-mode) . eglot-ensure)
     (eglot-managed-mode . manually-activate-flymake)
+
   :config
     (eglot-inlay-hints-mode -1)  ; A bit intrusive
     (fset #'jsonrpc--log-event #'ignore)  ; massive perf boost---don't log every event
@@ -267,7 +297,7 @@
       )
     ))
     (add-to-list 'eglot-server-programs '((go-mode  go-ts-mode) . ("gopls" )))
-    (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("ruff" "server")))
+    (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("ruff" "server" "--preview")))
     (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
        ("rust-analyzer"
         :initializationOptions (
@@ -300,6 +330,14 @@
     (eglot-highlight-symbol-face ((t (:inherit (lazy-highlight)))))
 )
 
+;; Integrate with eldoc
+(use-package eglot
+  :preface
+  (defun mp-eglot-eldoc ()
+    (setq eldoc-documentation-strategy
+            'eldoc-documentation-compose-eagerly))
+  :hook ((eglot-managed-mode . mp-eglot-eldoc)))
+
 ;; Eglot helpers
 (defcustom project-root-markers
     '(
@@ -326,3 +364,49 @@
     (setq project-vc-ignores '("target/" "bin/" "obj/"))
     (setq project-vc-extra-root-markers project-root-markers)
 )
+
+(use-package eldoc
+  :preface
+  (add-to-list 'display-buffer-alist
+   '("^\\*eldoc" display-buffer-at-bottom
+     (window-height . 0.16)
+     (slot . 0)))
+  (setq eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+  (eldoc--format-doc-buffer nil) ; programmatically creates an eldoc buffer.
+  (setq eldoc-echo-area-prefer-doc-buffer t)
+  :init
+  (global-eldoc-mode)
+  :custom
+  (eldoc-echo-area-use-multiline-p nil)
+  :bind (("<f1>" . eldoc-doc-buffer)
+  :config
+  (eldoc-add-command-completions "paredit-")
+  (eldoc-add-command-completions "combobulate-")
+)
+
+(with-eval-after-load 'eglot
+  (add-hook 'eglot-managed-mode-hook
+    (lambda ()
+      ;; Show flymake diagnostics first.
+      (setq eldoc-documentation-functions
+      (cons #'flymake-eldoc-function
+      (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+      ;; Show all eldoc feedback.
+      (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))
+
+;; ====================================
+;; Auto formatter
+;; ====================================
+(use-package format-all
+  :preface
+  (defun my/format-code ()
+    "Auto-format whole buffer."
+    (interactive)
+    (if (derived-mode-p 'prolog-mode)
+        (prolog-indent-buffer)
+      (format-all-buffer)))
+  :config
+  (global-set-key (kbd "M-F") #'my/format-code)
+  (add-hook 'prog-mode-hook #'format-all-ensure-formatter))
+
+

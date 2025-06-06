@@ -1,3 +1,22 @@
+--[[
+-- Print contents of `tbl`, with indentation.
+-- `indent` sets the initial level of indentation.
+function tprint(tbl, indent)
+    if not indent then
+        indent = 0
+    end
+    for k, v in pairs(tbl) do
+        local formatting = string.rep("  ", indent) .. k .. ": "
+        if type(v) == "table" then
+            print(formatting)
+            tprint(v, indent + 1)
+        else
+            print(formatting .. tostring(v))
+        end
+    end
+end
+--]]
+
 if vim.fn.has("mac") == 1 then
     if vim.fn.has("gui_running") == 0 then
         vim.o.termguicolors = false
@@ -52,11 +71,20 @@ end
 local scriptFolder = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand("<sfile>:p")), ":h")
 local Util = dofile(scriptFolder .. "/nvim/_util.lua")
 
+local wk = require("which-key")
+wk.setup({ delay = 500 }) -- 500ms delay before showing help
+
 vim.keymap.set("n", "<leader>c", builtin.colorscheme, { desc = "Telescope colorscheme" })
 vim.keymap.set("n", "<leader><space>", "<Right>", { desc = "Forward" })
-vim.keymap.set("n", "<leader>k", hoverfn, { desc = "HoverInfo" })
+
+wk.add({
+    { "<leader>l", group = "LSP commands" }, -- group
+    { "<leader>lk", hoverfn, desc = "Hover info", mode = "n" }, -- group
+    { "<leader>li", toggleInlays, desc = "Toggle inlay hints", mode = "n" }, -- group
+    { "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", desc = "Code action", mode = "n" }, -- group
+})
+
 vim.keymap.set("n", "K", hoverfn, { desc = "HoverInfo" })
-vim.keymap.set("n", "<leader>i", toggleInlays, { desc = "Toggle inlay hints" })
 vim.keymap.set("n", "<Esc>", function()
     Util.close_floats()
     if vim.bo.modifiable then
@@ -79,3 +107,5 @@ vim.lsp.enable("pyright")
 local utils = require("conform.util")
 -- Use space instead of tabs for Lua autoformatter
 utils.add_formatter_args(require("conform.formatters.stylua"), { "--indent-type", "Spaces", "--indent-width", "4" })
+
+-- Tab autocomplete
