@@ -29,3 +29,5 @@ if [ "$PS1" ]; then
   fi # BASH
 fi # Interactive
 
+# Load interactive aliases and functions
+FILE=~/.dotFiles/_rc.alias; [ -f $FILE ] && source $FILE; unset FILE
