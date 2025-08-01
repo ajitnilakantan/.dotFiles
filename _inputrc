@@ -1,6 +1,19 @@
- # Bash customizations: Copy to ~/.inputrc
- set completion-ignore-case on
- set enable-keypad on
- set show-all-if-ambiguous on
- set visible-stats on
- TAB: menu-complete
+# Default shortcuts
+$include /etc/inputrc
+
+# Bash customizations
+set completion-ignore-case on
+set enable-keypad on
+set show-all-if-ambiguous on
+set visible-stats on
+TAB: menu-complete
+
+# arrow up
+"\e[A": history-search-backward
+"\e[1;5A": history-search-backward
+"\e[1;2A": history-search-backward
+# arrow down
+"\e[B": history-search-forward
+"\e[1;5B": history-search-forward
+"\e[1;2B": history-search-forward
+

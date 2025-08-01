@@ -7,7 +7,7 @@ if [ "$PS1" ]; then
     # Assume Bash
 
     # Load input rc
-    FILE=~/.dotFiles/_inputrc; [ -f $FILE ] && bind -f $FILE
+    FILE=~/.dotFiles/_inputrc; [ -f $FILE ] && bind -f $FILE; unset FILE
 
     # Set prompt
     if [ "$TERM" == "dumb" ]; then
