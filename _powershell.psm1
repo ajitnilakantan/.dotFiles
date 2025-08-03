@@ -4,11 +4,20 @@
 ##  E.g. ~\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 # in PS5
 ##  E.g. ~\Documents\PowerShell\profile.ps1 # powershell-core7
 ##
-# if (Test-Path "~/.dotFiles/_powershell.psm1") { Import-Module "~/.dotFiles/_powershell.psm1" }
+# if (Test-Path "~/.dotFiles/_powershell.psm1") { Import-Module -DisableNameChecking "~/.dotFiles/_powershell.psm1" }
 ###
 
 # This script location
 $Script:ThisFolder = (Split-Path $MyInvocation.MyCommand.Path -Parent)
+
+# Default is 4096
+$global:MaximumHistoryCount = 32767
+
+# Produce UTF-8 by default
+$PSDefaultParameterValues["Out-File:Encoding"]="utf8"
+
+# Show selection menu for tab
+Set-PSReadlineKeyHandler -Chord Tab -Function MenuComplete
 
 # Starship prompt
 if (Get-Command starship) {
@@ -103,6 +112,10 @@ function gvim()
     } else {
         Start-Process -NoNewWindow "$($(Get-Command 'gvim.exe').Path)" $("-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
     }
+}
+
+function ssh-copy-id($server) {
+    type $env:USERPROFILE\.ssh\id_rsa.pub | ssh $server "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 }
 
 function frg {

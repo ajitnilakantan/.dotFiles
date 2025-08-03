@@ -26,9 +26,11 @@
 (use-package vertico
   :config
   (setopt
-    vertico-mode t
     vertico-mouse-mode t
-    vertico-cycle t)
+    vertico-cycle t
+    read-buffer-completion-ignore-case t
+    read-file-name-completion-ignore-case t
+    completion-styles '(basic substring partial-completion flex))
   :init
   ;; You'll want to make sure that e.g. fido-mode isn't enabled
   (vertico-mode))
@@ -46,8 +48,10 @@
 
 ;; Marginalia: annotations for minibuffer
 (use-package marginalia
+  :after vertico
   :config
   (keymap-set minibuffer-local-map "M-A" 'marginalia-cycle)
+  :init
   (marginalia-mode)
 )
 
@@ -55,37 +59,25 @@
 ;;;   Buffer completion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; == Corfu
+;; Adds intellisense-style code completion at point that works great
+;; with LSP via Eglot. You'll likely want to configure this one to
+;; match your editing preferences, there's no one-size-fits-all
+;; solution.
 (use-package corfu
-    :custom
-    (corfu-cycle t)                 ; Allows cycling through candidates
-    (corfu-auto t)                  ; Enable auto completion
-    (corfu-auto-prefix 2)
-    (corfu-auto-delay 0.1)
-    (corfu-popupinfo-delay '(0.4 . 0.2))
-    (corfu-preview-current 'insert) ; Do not preview current candidate
-    (corfu-preselect-first nil)
-    (corfu-on-exact-match nil)      ; Don't auto expand tempel snippets
-    (corfu-quit-at-boundary nil)    ; enable orderless style completion
-
-    :bind (:map corfu-map
-                ("M-SPC"      . corfu-insert-separator)
-                ("TAB"        . corfu-next)
-                ([tab]        . corfu-next)
-                ("S-TAB"      . corfu-previous)
-                ([backtab]    . corfu-previous)
-                ("S-<return>" . nil) ;; leave my entry as it is
-                ("RET"        . corfu-insert))
-
-    :init
-       (global-corfu-mode)
-       (corfu-history-mode)
-       (corfu-popupinfo-mode) ; Popup completion info
+  :ensure t
+  :init
+  (global-corfu-mode)
+  (corfu-history-mode)
+  (corfu-popupinfo-mode) ; Popup completion info
+  :custom
+  (corfu-cycle t)                 ; Allows cycling through candidates
+  (corfu-auto t)                  ; Enable auto completion
+  ;; You may want to play with delay/prefix/styles to suit your preferences.
+  (corfu-auto-delay 0.1)
+  (corfu-popupinfo-delay '(0.4 . 0.2))
+  (corfu-auto-prefix 3)
+  (completion-styles '(basic))
 )
-
-(use-package corfu-terminal
-  :unless (display-graphic-p)
-  :after corfu
-  :init (corfu-terminal-mode +1))
 
 (use-package cape
   :hook

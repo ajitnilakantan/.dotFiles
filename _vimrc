@@ -263,11 +263,11 @@ map <S-Right> <C-w><Right>
 if has('nvim')
 lua <<EOF
   scriptFolder = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand('<sfile>:p')), ':h')
-  vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
+  vim.opt.rtp:prepend(scriptFolder .. "/nvim")
   dofile(scriptFolder .. '/nvim/_init.lua')
-  vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
+  -- vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
   dofile(scriptFolder .. '/nvim/_lsp.lua')
-  vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
+  -- vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
   dofile(scriptFolder .. '/nvim/_custom.lua')
 EOF
 
