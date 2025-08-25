@@ -84,8 +84,8 @@ function frg {
 # Environment variables for interactive use only
 export CLICOLOR=1
 export LESS='eFRX -i -G -M -X -s'
-export LSCOLORS=GxfxcxdxbxGgGdabagacad
-export LS_COLORS='ow=01;36;40'
+export LSCOLORS=gxfxCxDxbxDxDxBxBxExEx
+export LS_COLORS='di=36:ln=35:so=1;32:pi=1;33:ex=31:bd=1;33:cd=1;33:su=1;31:sg=1;31:tw=1;34:ow=1;34'
 export RIPGREP_CONFIG_PATH="${ThisFolder}/_ripgreprc"
 export PATH="$HOME/.dotnet/tools:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
