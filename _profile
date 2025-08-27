@@ -8,9 +8,6 @@ if [ "$PS1" ]; then
   if [ -n "`$SHELL -c 'echo $BASH_VERSION'`" ]; then
     # Assume Bash
 
-    # Respect default shortcuts.
-    $include /etc/inputrc
-
     # Load input rc
     FILE=~/.dotFiles/_inputrc; [ -f $FILE ] && bind -f $FILE; unset FILE
 

@@ -1,4 +1,4 @@
-# Default shortcuts
+# Respect default shortcuts.
 $include /etc/inputrc
 
 # Bash customizations
