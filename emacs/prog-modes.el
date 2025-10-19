@@ -240,7 +240,8 @@
     (setq eglot-ignored-server-capabilities
         ;; the things we actually want are uncommented here. Weird
         ;; way to do it, but ok.
-      '(;:hoverProvider ;(provides async type info, would like this to be manual)
+	'(
+	;:hoverProvider ;(provides async type info, would like this to be manual)
         ;:completionProvider ; (provides company with completions)
         ;:signatureHelpProvider ; (eldoc integration, unsure entirely what it does)
         ;:definitionProvider ; (M-. jump to definition)
@@ -261,7 +262,9 @@
         :colorProvider
         :foldingRangeProvider
         :executeCommandProvider
-        :inlayHintProvider))
+        :inlayHintProvider
+	)
+      )
 
 
   ;; Add your programming modes here to automatically start Eglot,
@@ -378,7 +381,7 @@
   (global-eldoc-mode)
   :custom
   (eldoc-echo-area-use-multiline-p nil)
-  :bind (("<f1>" . eldoc-doc-buffer)
+  :bind (("<f1>" . eldoc-doc-buffer))
   :config
   (eldoc-add-command-completions "paredit-")
   (eldoc-add-command-completions "combobulate-")
