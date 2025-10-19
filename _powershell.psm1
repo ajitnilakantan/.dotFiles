@@ -160,6 +160,7 @@ if (Get-Command difft -ErrorAction Ignore) {
 $env:LESS='eFRX -i -G -M -X -s'
 $env:PAGER='less -+e -+E -i -G -M -X -s'
 $env:RIPGREP_CONFIG_PATH=(Join-Path $ThisFolder '_ripgreprc')
+$env:YAZI_FILE_ONE="C:\Users\ajit\scoop\apps\git\current\usr\bin\file.exe"
 
 # Interactive Python startup script
 $env:PYTHONSTARTUP=(Join-Path $ThisFolder '_pythonstartup')
