@@ -1,8 +1,11 @@
+#!/bin/bash
+
 ## Interactive shell.  Sourced after zprofile
 
 # assume Zsh
 # rm -f ~/.zcompdump
-plugins=( zsh-completions)
+# shellcheck disable=SC2034
+plugins=( zsh-completions )
 autoload -U compinit && compinit
 autoload -U colors && colors
 
@@ -35,11 +38,13 @@ setopt interactivecomments
 
 # https://superuser.com/questions/49092/how-to-format-the-path-in-a-zsh-prompt
 setopt PROMPT_SUBST
-PROMPT='%n%f@%F{yellow}%m%f %B%~%b %# '
-PROMPT='%n%f@%F{yellow}%m%f %B%~%b %(?..%F{red})%#%f '
+export PROMPT='%n%f@%F{yellow}%m%f %B%~%b %# '
+export PROMPT='%n%f@%F{yellow}%m%f %B%~%b %(?..%F{red})%#%f '
 if [[ "$TERM" == "dumb" ]]; then
   PS1='$ '
 fi
 
 # Load interactive aliases and functions
+# shellcheck disable=SC1090
 FILE=~/.dotFiles/_rc.alias; [ -f $FILE ] && source $FILE; unset FILE
+

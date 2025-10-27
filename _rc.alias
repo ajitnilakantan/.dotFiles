@@ -1,13 +1,16 @@
+#!/bin/bash
+
 # Only in interactive shells
 if [ -n "$BASH_VERSION" ]; then
-    ThisFolder="$(dirname "$BASH_SOURCE")"
+    ThisFolder="$(dirname "${BASH_SOURCE[0]}")"
 elif [ -n "$ZSH_VERSION" ]; then
+    # shellcheck disable=SC2296
     ThisFolder="$(dirname "${(%):-%N}")"
 else
-    ThisFolder="~/.dotFiles"
+    ThisFolder="$HOME/.dotFiles"
 fi
 
-echo this=$ThisFolder
+echo this="$ThisFolder"
 
 function cls() { clear; }
 alias dev='cd ~/dev'
@@ -17,25 +20,25 @@ function move() { mv -i "$@"; }
 function mov() { mv -i "$@"; }
 function ren() { mv -i "$@"; }
 alias ls='ls -FG --color=auto'
-function pd () { pushd "$1"; }
-function po () { popd  "$1"; }
+function pd () { pushd "$1" || return; }
+function po () { popd  "$1" || return; }
 function md () { mkdir  "$1"; }
 function rd () { rmdir  "$1"; }
-function ff () { 2>/dev/null find -x . -name "$1" -print; }
+function ff () { find -x . -name "$1" -print 2>/dev/null; }
 #
 # Copy file on ssh host back to client
 function ssh_cp_client() { scp "$1" "[${SSH_CLIENT% *}]":/tmp/; }
 
 
 # Whois helper
-function w () { if [[ $* =~ [.] ]]; then w="$@"; else w="$@".com; fi; echo "$w"; whois "$w" | grep "Expir"; }
+function w () { if [[ $* =~ [.] ]]; then w="$*"; else w="$*".com; fi; echo "$w"; whois "$w" | grep "Expir"; }
 
 # Run nvim if available
 function vim () {
     if type -a nvim > /dev/null 2>&1; then
-        command \nvim -u ~/.dotFiles/_vimrc "$@"
+        command nvim -u ~/.dotFiles/_vimrc "$@"
     else
-        command \vim -u ~/.dotFiles/_vimrc "$@"
+        command vim -u ~/.dotFiles/_vimrc "$@"
     fi
 }
 
@@ -47,16 +50,16 @@ function gvim () {
     if type -a neovide > /dev/null 2>&1; then
         \neovide --fork -- -u ~/.dotFiles/_vimrc "$@"
     else
-        command \gvim -u ~/.dotFiles/_vimrc "$@"
+        command gvim -u ~/.dotFiles/_vimrc "$@"
     fi
 }
 
 # Set init-directory for emacs
 function emacs() {
-    command \emacs --init-directory ~/.dotFiles/emacs/ -nw "$@";
+    command emacs --init-directory ~/.dotFiles/emacs/ -nw "$@";
 }
 function emacsw() {
-    command \emacs --init-directory ~/.dotFiles/emacs/ "$@" & disown;
+    command emacs --init-directory ~/.dotFiles/emacs/ "$@" & disown;
 }
 
 # function gitdiff() { git fetch origin ; git diff --name-only master origin/master; git diff @ '@{upstream}'; }

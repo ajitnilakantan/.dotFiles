@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #
 # Add to .profile:
 #  FILE=~/.dotFiles/_profile; [ -f $FILE ] && source $FILE
@@ -5,7 +7,8 @@
 
 
 if [ "$PS1" ]; then
-  if [ -n "`$SHELL -c 'echo $BASH_VERSION'`" ]; then
+  # shellcheck disable=SC1090
+  if [ -n "$($SHELL -c 'echo $BASH_VERSINFO')" ]; then
     # Assume Bash
 
     # Load input rc
@@ -32,4 +35,5 @@ if [ "$PS1" ]; then
 fi # Interactive
 
 # Load interactive aliases and functions
+# shellcheck disable=SC1090
 FILE=~/.dotFiles/_rc.alias; [ -f $FILE ] && source $FILE; unset FILE
