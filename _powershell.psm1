@@ -83,14 +83,14 @@ function gitdiff()
 function emacs()
 {
     $local:emacsinit = (Join-Path $ThisFolder 'emacs')
-    Start-Process -NoNewWindow -Wait "$($(Get-Command 'emacs.exe').Path)"  $("--init-directory",$local:emacsinit,"-nw",$args | Join-String -DoubleQuote -Separator ' ')
+    $local:noWait = @{}
+    if ($args -contains "-nw") {
+       $local:noWait = @{Wait = $true}
+    }
+    Start-Process -NoNewWindow @local:noWait "$($(Get-Command 'emacs.exe').Path)"  $("--init-directory",$local:emacsinit,$args | Join-String -DoubleQuote -Separator ' ')
 }
 
-function emacsw()
-{
-    $local:emacsinit = (Join-Path $ThisFolder 'emacs')
-    Start-Process -NoNewWindow "$($(Get-Command 'emacs.exe').Path)" $("--init-directory",$local:emacsinit,$args | Join-String -DoubleQuote -Separator ' ')
-}
+function emacsw() {emacs @args}
 
 function vim()
 {
