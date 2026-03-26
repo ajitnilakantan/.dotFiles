@@ -5,11 +5,17 @@
 ;; ====================================
 
 
-(use-package fsharp-mode)
+(use-package fsharp-mode
+  :ensure t
+  :defer t
+  :hook ((fsharp-mode fsharp-ts-mode) . eglot-ensure)
+  :config
+)
 
 (use-package go-mode
   :bind (:map go-mode-map
           ("C-c C-f" . 'gofmt))
+  :hook ((go-mode go-ts-mode) . eglot-ensure)
   :hook (before-save . gofmt-before-save))
 
 (use-package json-mode)
@@ -33,6 +39,7 @@
 (use-package python
   :config
     (setq python-flymake-command '("ruff"))
+  :hook ((python-mode python-ts-mode) . eglot-ensure)
 )
 
 (use-package rust-mode
@@ -42,6 +49,7 @@
           ("C-c C-f" . 'rust-format-buffer)
           ("C-c C-t" . 'rust-test))
   :hook (rust-mode . prettify-symbols-mode)
+  :hook ((rust-mode rust-ts-mode) . eglot-ensure)
 )
 
 (use-package web-mode
@@ -51,7 +59,9 @@
   (web-mode-code-indent-offset 2)
   (web-mode-css-indent-offset 2)
   (web-mode-markup-indent-offset 2)
-  (web-mode-enable-auto-quoting nil))
+  (web-mode-enable-auto-quoting nil)
+  :hook ((web-mode web-ts-mode) . eglot-ensure)
+)
 
 (use-package yaml-mode
   :mode ( "\\.clang-format\\'" "\\.clang-tidy\\'" "\\.clangd\\'")
@@ -102,6 +112,11 @@
 ;; OTHER HIGHLIGHTING
 ;; ====================================
 (use-package highlight-indent-guides
+  :after rainbow-delimiters
+  :preface
+  ;; set the color of the indent indicator to face of rainbow delimiter depth
+  (defun rainbow-highlighter (level responsive display)
+    (intern (format "rainbow-delimiters-depth-%d-face" (+ (mod level 9) 1))))
   :init
   (add-hook 'prog-mode-hook #'(lambda () (highlight-indent-guides-mode)))
   (add-hook 'text-mode-hook #'(lambda () (highlight-indent-guides-mode)))
@@ -113,7 +128,7 @@
     (progn
       (setq highlight-indent-guides-method 'bitmap)
       (setq highlight-indent-guides-responsive 'top)
-      (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-line))
+      (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-dots))
     (progn
       (setq highlight-indent-guides-method 'column)
       (setq highlight-indent-guides-auto-enabled nil)
@@ -271,11 +286,11 @@
   ;; assuming you have the respective LSP server installed.
   :hook
     ((csharp-mode csharp-ts-mode) . eglot-ensure)
-    ((fsharp-mode fsharp-ts-mode) . eglot-ensure)
-    ((go-mode go-ts-mode) . eglot-ensure)
-    ((python-mode python-ts-mode) . eglot-ensure)
-    ((rust-mode rust-ts-mode) . eglot-ensure)
-    ((web-mode web-ts-mode) . eglot-ensure)
+    ; ((fsharp-mode fsharp-ts-mode) . eglot-ensure)
+    ; ((go-mode go-ts-mode) . eglot-ensure)
+    ; ((python-mode python-ts-mode) . eglot-ensure)
+    ; ((rust-mode rust-ts-mode) . eglot-ensure)
+    ; ((web-mode web-ts-mode) . eglot-ensure)
     (eglot-managed-mode . manually-activate-flymake)
 
   :config
@@ -380,7 +395,7 @@
   :init
   (global-eldoc-mode)
   :custom
-  (eldoc-echo-area-use-multiline-p nil)
+  (eldoc-echo-area-use-multiline-p 'maybe)
   :bind (("<f1>" . eldoc-doc-buffer))
   :config
   (eldoc-add-command-completions "paredit-")
