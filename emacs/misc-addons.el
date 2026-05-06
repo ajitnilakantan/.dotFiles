@@ -63,22 +63,22 @@
 ;; with LSP via Eglot. You'll likely want to configure this one to
 ;; match your editing preferences, there's no one-size-fits-all
 ;; solution.
-(use-package corfu
-  :ensure t
-  :init
-  (global-corfu-mode)
-  (corfu-history-mode)
-  (corfu-popupinfo-mode) ; Popup completion info
-  :custom
-  (corfu-cycle t)                 ; Allows cycling through candidates
-  (corfu-auto t)                  ; Enable auto completion
-  ;; You may want to play with delay/prefix/styles to suit your preferences.
-  (corfu-auto-delay 0.1)
-  (corfu-popupinfo-delay '(0.4 . 0.2))
-  (corfu-auto-prefix 3)
-  (completion-styles '(basic))
-)
-
+;ZZ (use-package corfu
+;ZZ   :ensure t
+;ZZ   :init
+;ZZ   (global-corfu-mode)
+;ZZ   (corfu-history-mode)
+;ZZ   (corfu-popupinfo-mode) ; Popup completion info
+;ZZ   :custom
+;ZZ   (corfu-cycle t)                 ; Allows cycling through candidates
+;ZZ   (corfu-auto t)                  ; Enable auto completion
+;ZZ   ;; You may want to play with delay/prefix/styles to suit your preferences.
+;ZZ   (corfu-auto-delay 0.1)
+;ZZ   (corfu-popupinfo-delay '(0.4 . 0.2))
+;ZZ   (corfu-auto-prefix 3)
+;ZZ   (completion-styles '(basic))
+;ZZ )
+;ZZ 
 (use-package cape
   :hook
   (eglot-managed-mode . (lambda ()
@@ -96,16 +96,24 @@
   (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
   (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible))
 
+(use-package completion-preview
+  :ensure nil ; Use builtin
+  :custom
+    (completion-preview-minimum-symbol-length 2)
+  :hook (prog-mode . completion-preview-mode)
+  :bind
+  ( :map completion-preview-active-mode-map
+    ("<up>" . completion-preview-next-candidate)
+    ("<down>" . completion-preview-prev-candidate)))
 
 ;; == Editorconfig
 (use-package editorconfig
-  :ensure nil
+  :ensure nil ; Use builtin
   :config
   (editorconfig-mode 1))
 
 ;; A tree plugin like NerdTree for Vim
 (use-package neotree
-  :ensure t
   :custom (neo-theme (if (display-graphic-p) 'nerd-icons 'arrow))
   :bind (("<f8>"       . #'neotree-toggle))
 )
@@ -127,9 +135,6 @@
 
 ;; rainbow-delimiters
 (use-package rainbow-delimiters
-  :ensure t
-  :defer t
-  :init
   :hook (prog-mode . rainbow-delimiters-mode))
 
 ;; Persist scratch buffer
@@ -137,8 +142,9 @@
   :after no-littering
   :custom
   (persistent-scratch-save-file (no-littering-expand-var-file-name "scratch"))
-  :config
-  (persistent-scratch-setup-default))
+  :hook
+  (after-init . persistent-scratch-setup-default)
+)
 
 ;; Save the place of the cursor in each file, and restore it upon opening it again.
 (use-package saveplace

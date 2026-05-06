@@ -23,7 +23,7 @@
 (setq load-prefer-newer t)
 
 ;; Write any customizations to a temp file so they are discarded.
-(setq custom-file (make-temp-file "custom-" nil ".el"))
+;(setq custom-file (make-temp-file "custom-" nil ".el"))
 
 ;; Faster to disable these here (before they've been initialized)
 (push '(menu-bar-lines . 0) default-frame-alist)

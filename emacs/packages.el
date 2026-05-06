@@ -1,6 +1,7 @@
 ;;; packages.el --- Emacs configuration -*- lexical-binding: t -*-
 
 ;; Bring in package utilities so we can install packages from the web.
+;; update with package-refresh-contents and package-upgrade-all
 
 
 (setq package-user-dir (expand-file-name "emacs/elpa/" (xdg-cache-home)))
@@ -19,14 +20,14 @@
     (setopt package-check-signature nil))
 
 (setq package-archives
-      '(("gnu-elpa" . "https://elpa.gnu.org/packages/")
-        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-        ("melpa" . "https://melpa.org/packages/")))
+      '(("melpa" . "https://melpa.org/packages/")
+        ("gnu-elpa" . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
 
 ;; Highest number gets priority (what is not mentioned has priority 0)
 (setq package-archive-priorities
-      '(("gnu-elpa" . 3)
-        ("melpa" . 2)
+      '(("melpa" . 3)
+        ("gnu-elpa" . 2)
         ("nongnu" . 1)))
 
 (package-initialize)

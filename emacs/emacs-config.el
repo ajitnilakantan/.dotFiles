@@ -87,8 +87,9 @@
   (windmove-default-keybindings 'meta)
 
   ;; Don't deselect on kill
-  (defun my/no-deactivate-mark (&rest _) (setq deactivate-mark nil))
-  (advice-add 'kill-ring-save :after #'my/no-deactivate-mark)
+  ;(define-advice kill-ring-save (:after (&rest _args) keep-highlight)
+  ;  "Ensure the mark remains active after copying."
+  ;  (setq deactivate-mark nil))
 
   ;; Remember positions
   (if (window-system)
@@ -106,6 +107,12 @@
   (setq-default left-margin-width 3 right-margin-width 0)
   (setq left-margin-width 3 right-margin-width 0)
   (set-window-buffer nil (current-buffer))
+
+  ;; Automatically reread from disk if the underlying file changes
+  (setq auto-revert-interval 1)
+  (setq auto-revert-check-vc-info t)
+  (global-auto-revert-mode)
+
 
   ;; integrate copy/paste with X
   (setq select-enable-clipboard t
@@ -137,6 +144,12 @@
     "Switch to the next window"
     (interactive)
     (select-window (next-window)))
+  ;; Delete window ^x1
+  (defun my/delete-other-windows ()
+    "Delete other windows including side-windows"
+    (interactive)
+    (let ((ignore-window-parameters t))
+      (delete-other-windows)))
   (defun my/keyboard-quit-dwim ()
     "Do-What-I-Mean behaviour for a general `keyboard-quit'.
      The generic `keyboard-quit' does not do the expected thing when
@@ -160,33 +173,42 @@
      (t
       (keyboard-quit))))
   :bind (
-	 ("<backtab>" . #'indent-relative)
-         ("C-."       . #'set-mark-command) ; set mark
-         ("C-c x r"   . (lambda () (interactive) (load-file user-init-file)))  ; reload init.el
-         ("C-g"       . #'my/keyboard-quit-dwim) ; cancel operation
-         ("C-x C-b"   . #'buffer-menu)  ; instead of list-buffers, replace current window
-         ("C-x n"     . (lambda () (interactive) (select-window (next-window))))  ; next window
-         ("C-x p"     . (lambda () (interactive) (select-window (previous-window))))  ; prev window
-         ("C-x x"     . #'bs-cycle-next)  ; cycle through buffers in current window
-         ("C-x C-v"   . #'find-file)
-         ("M-C-f"     . #'my/match-paren)  ; matching brackets
-	 ("M-["       . #'backward-sexp)
-	 ("M-]"       . #'forward-sexp)
-         ("s-a"       . #'mark-whole-buffer)
-         ("s-c"       . #'ns-copy-including-secondary)
-         ("s-w"       . #'ns-copy-including-secondary)
-         ("s-v"       . 'yank)
-         ("s-x"       . 'kill-region)
-        )
-
+     ("<backtab>" . #'indent-relative)
+     ("C-."       . #'set-mark-command) ; set mark
+     ("C-c x r"   . (lambda () (interactive) (load-file user-init-file)))  ; reload init.el
+     ("C-g"       . #'my/keyboard-quit-dwim) ; cancel operation
+     ("C-x C-b"   . #'buffer-menu)  ; instead of list-buffers, replace current window
+     ("C-x 1"     . #'my/delete-other-windows)  ; delete other windows
+     ("C-x n"     . (lambda () (interactive) (select-window (next-window))))  ; next window
+     ("C-x p"     . (lambda () (interactive) (select-window (previous-window))))  ; prev window
+     ("C-x x"     . #'bs-cycle-next)  ; cycle through buffers in current window
+     ("C-x C-v"   . #'find-file)
+     ("M-C-f"     . #'my/match-paren)  ; matching brackets
+     ("M-["       . #'backward-sexp)
+     ("M-]"       . #'forward-sexp)
+     ("s-a"       . #'mark-whole-buffer)
+     ("s-c"       . #'ns-copy-including-secondary)
+     ("s-w"       . #'ns-copy-including-secondary)
+     ("s-v"       . 'yank)
+     ("s-x"       . 'kill-region)
+    )
 )
 
 (use-package emacs
+  :ensure nil ; built-in package
   :config
+  ; Indent options
+  (setopt tab-always-indent 'complete) ; Indents first, then performs completion if pressed again.
+  (setopt tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
+  (setopt indent-tabs-mode nil) ; Use spaces for indentation
+  (setopt tab-width 4) ; Display tabs as 4 columns wide
+  (setopt standard-indent 4)
+
+  ; Completion options
   (setopt enable-recursive-minibuffers t)                ; Use the minibuffer whilst in the minibuffer
   (setopt completion-cycle-threshold 1)                  ; TAB cycles candidates
   (setopt completions-detailed t)                        ; Show annotations
-  (setopt tab-always-indent 'complete)                   ; When I hit TAB, try to complete, otherwise, indent
+
   (setopt completion-styles '(basic initials substring)) ; Different styles to match input to candidates
 
   (setopt completion-auto-help 'always)                  ; Open completion always; `lazy' another option
@@ -209,9 +231,6 @@
   (blink-cursor-mode -1)                                ; Steady cursor
   (pixel-scroll-precision-mode)                         ; Smooth scrolling
 
-  ;; Use common keystrokes by default
-  (cua-mode)
-
   ;; Display line numbers in programming mode
   (add-hook 'prog-mode-hook 'display-line-numbers-mode)
   (setopt display-line-numbers-width 3)           ; Set a minimum width
@@ -224,3 +243,4 @@
 
 )
 
+(provide 'emacs-config)

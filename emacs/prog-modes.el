@@ -7,12 +7,10 @@
 
 (use-package csharp-mode
   :hook ((csharp-mode csharp-ts-mode) . eglot-ensure)
-  :config
 )
 
 (use-package fsharp-mode
   :hook ((fsharp-mode fsharp-ts-mode) . eglot-ensure)
-  :config
 )
 
 (use-package go-mode
@@ -32,16 +30,16 @@
   ;; automatic spell checker.
   :hook ((markdown-mode . visual-line-mode)
          (markdown-mode . flyspell-mode))
-  :init
-  (setq markdown-command "multimarkdown")
+  :custom
+    (markdown-command "multimarkdown")
   :mode ("\\.md\\'")
 )
 
 (use-package powershell)
 
 (use-package python
-  :config
-    (setq python-flymake-command '("ruff"))
+  :custom
+    (python-flymake-command '("ruff"))
   :hook ((python-mode python-ts-mode) . eglot-ensure)
 )
 
@@ -58,11 +56,11 @@
 (use-package web-mode
   :mode ("\\.ts\\'" "\\.js\\'" "\\.mjs\\'" "\\.tsx\\'" "\\.jsx\\'")
   :custom
-  (web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
-  (web-mode-code-indent-offset 2)
-  (web-mode-css-indent-offset 2)
-  (web-mode-markup-indent-offset 2)
-  (web-mode-enable-auto-quoting nil)
+    (web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
+    (web-mode-code-indent-offset 2)
+    (web-mode-css-indent-offset 2)
+    (web-mode-markup-indent-offset 2)
+    (web-mode-enable-auto-quoting nil)
   :hook ((web-mode web-ts-mode) . eglot-ensure)
 )
 
@@ -74,42 +72,23 @@
 ;; ====================================
 ;; TreeSitter setup
 ;; ====================================
+(defun my-ignore-treesit-indent-error (args)
+  "Ignore treesit node errors during indentation."
+  (condition-case nil
+      (apply args)
+    (wrong-type-argument nil)))
+;; Apply to the culprit function, often:
+(advice-add 'treesit-indent-region :around #'my-ignore-treesit-indent-error)
+(advice-add 'treesit-indent :around #'my-ignore-treesit-indent-error)
+
 (use-package treesit-auto
   :ensure t
-  :defer t
   :vc (:url "https://github.com/renzmann/treesit-auto.git")
   :custom
     (treesit-auto-install t) ; Can be t or 'prompt
   :config
     (treesit-auto-add-to-auto-mode-alist 'all)
     (global-treesit-auto-mode))
-
-;; FOLDING USING TREE SITTER
-(use-package treesit-fold
-  :unless (eq system-type 'android) ; Doesn't work in android
-  :init
-    (defun my/treesit-parser-for-lang-mode (lang-mode-symbol)
-      (when (and (treesit-available-p)
-                 (treesit-language-available-p lang-mode-symbol))
-        (treesit-parser-create lang-mode-symbol)))
-  :hook
-    (emacs-lisp-mode . (lambda () (my/treesit-parser-for-lang-mode 'elisp)))
-    (xml-mode . (lambda () (my/treesit-parser-for-lang-mode 'xml)))
-  :config
-    (global-treesit-fold-mode t)
-)
-
-(use-package treesit-fold-indicators :ensure nil
-  :if (display-graphic-p)
-  ;; :custom
-  ;; (treesit-fold-indicators-priority 50)
-  :config
-    (global-treesit-fold-indicators-mode t)
-  ;; Menu for Treesit-Fold
-    (easy-menu-add-item nil '("tools")
-                      '("Tree Sitter"
-                        ["Toggle TS-Fold" treesit-fold-mode t]
-                        ["Toggle Ts-Fold Indicator" treesit-fold-indicators-mode t])))
 
 ;; ====================================
 ;; OTHER HIGHLIGHTING
@@ -120,9 +99,6 @@
   ;; set the color of the indent indicator to face of rainbow delimiter depth
     (defun rainbow-highlighter (level responsive display)
       (intern (format "rainbow-delimiters-depth-%d-face" (+ (mod level 9) 1))))
-  :init
-    (add-hook 'prog-mode-hook #'(lambda () (highlight-indent-guides-mode)))
-    (add-hook 'text-mode-hook #'(lambda () (highlight-indent-guides-mode)))
   :config
     (setq highlight-indent-guides-auto-odd-face-perc 25)
     (setq highlight-indent-guides-auto-even-face-perc 25)
@@ -137,14 +113,15 @@
         (setq highlight-indent-guides-auto-enabled nil)
         (setq highlight-indent-guides-responsive nil))
     )
+  :hook
+    (prog-mode . highlight-indent-guides-mode)
+    (text-mode . highlight-indent-guides-mode)
 )
 
 ;; ====================================
 ;; TODO Hightlight (Comment-tags)
 ;; ====================================
 (use-package hl-todo
-  :hook
-    ((prog-mode text-mode) . hl-todo-mode)
   :config
     (setq hl-todo-highlight-punctuation ":"
           hl-todo-keyword-faces
@@ -154,6 +131,8 @@
             ("REVIEW"     font-lock-keyword-face bold)
             ("NOTE"       success bold)
             ("DEPRECATED" font-lock-doc-face bold)))
+  :hook
+    ((prog-mode text-mode) . hl-todo-mode)
 )
 
 
@@ -198,9 +177,10 @@
     (flymake-indicator-type 'margins)
     (flymake-autoresize-margins t)
     (flymake-margin-indicators-string
-       '((error "\u2B24" compilation-error)
-         (warning "\u2B24" compilation-warning)
-         (note "\u2B24" compilation-info)))
+       '((error "\U0001F6D1" compilation-error) ; 🛑
+         (warning "\u2757" compilation-warning) ; ❗
+         (note "\u2B24" compilation-info) ; ⬤
+        ))
   :hook
     ;; Register Flymake as an ElDoc documentation source
     (flymake-mode . (lambda () (add-hook 'eldoc-documentation-functions #'flymake-eldoc-function 0 t)))
@@ -222,7 +202,7 @@
 (use-package eldoc
   :defer t
   :diminish t
-  :preface
+  :config
     (eldoc--format-doc-buffer nil) ; programmatically creates an eldoc buffer.
     ;; Automatically update the *eldoc* buffer if it's already visible
     (setq eldoc-echo-area-prefer-doc-buffer t)
@@ -233,7 +213,7 @@
   :custom
     ;; Combine multiple doc sources (like LSP +Flymake) into one view
     (eldoc-documentation-strategy #'eldoc-documentation-compose)
-  :init
+  :config
     (global-eldoc-mode)
   :bind
     (("<f1>" . eldoc-doc-buffer))
@@ -288,6 +268,17 @@
 ;; ====================================
 ;; Eglot customization
 ;; ====================================
+
+(use-package eglot
+  :ensure nil ; built in package
+  :config
+    ;; Catch spurious errors
+    (defun my/ignore-errors (oldfun cmd &rest args)
+      (ignore-errors
+        (apply oldfun cmd args)))
+    (advice-add 'hl-todo-flymake :around 'my/ignore-errors)
+    (advice-add 'eglot--hover-info :around 'my/ignore-errors)
+)
 (use-package eglot
   :ensure nil ; built in package
 
@@ -306,7 +297,7 @@
     (setq eglot-ignored-server-capabilities
         ;; the things we actually want are uncommented here. Weird
         ;; way to do it, but ok.
-	'(
+    '(
         ;:hoverProvider ;(provides async type info, would like this to be manual)
         ;:completionProvider ; (provides company with completions)
         ;:signatureHelpProvider ; (eldoc integration, unsure entirely what it does)
@@ -329,14 +320,22 @@
         :foldingRangeProvider
         :executeCommandProvider
         :inlayHintProvider
-	 )
+     )
     )
 
   :config
-    (eglot-inlay-hints-mode -1)  ; A bit intrusive
     (fset #'jsonrpc--log-event #'ignore)  ; massive perf boost---don't log every event
     (setq eglot-report-progress nil)  ; makes modeline flash less
     ; (add-to-list 'eglot-stay-out-of 'flymake)
+  :hook
+    ;; A bit intrusive
+    (eglot-managed-mode . (lambda () (eglot-inlay-hints-mode -1)))
+    ;; Show flymake messages first
+    (eglot-managed-mode .
+      (lambda ()
+        (setq-local eldoc-documentation-functions
+          (cons #'flymake-eldoc-function
+            (remove #'flymake-eldoc-function eldoc-documentation-functions)))))
 )
 
 ;; ====================================
@@ -354,6 +353,7 @@
        ("fsautocomplete"
         :initializationOptions (
           :AutomaticWorkspaceInit t
+          :UnnecessaryParenthesesAnalyzer nil
           ;:disableFailedProjectNotifications t
           ;:enableMSBuildProjectGraph t
           ;:verboseLogging t
@@ -372,14 +372,6 @@
       )
     ))
 )
-
-;; Show flymake messages first
-(with-eval-after-load 'eglot
-  (add-hook 'eglot-managed-mode-hook
-            (lambda ()
-              (setq-local eldoc-documentation-functions
-                          (cons #'flymake-eldoc-function
-                                (remove #'flymake-eldoc-function eldoc-documentation-functions))))))
 
 ;; ====================================
 ;; Setup buffer positions
@@ -408,7 +400,8 @@
 
           ;; 3. ElDoc at the BOTTOM-RIGHT (Slot 1)
           ("\\*eldoc\\*"
-           (display-buffer-in-side-window)
+           (display-buffer-in-side-window) ; Use a fixed window
+           ; (display-buffer-at-bottom) ; Use a standard bottom window so ^X-1 closes it
            (side . bottom)
            (slot . 1)
            (window-height . 0.25)
@@ -417,7 +410,8 @@
 
           ;; 4. Flymake at the BOTTOM-RIGHT (Slot 1)
           ("\\*Flymake diagnostics"
-           (display-buffer-in-side-window)
+           (display-buffer-in-side-window) ; Use a fixed window
+           ; (display-buffer-at-bottom) ; Use a standard bottom window so ^X-1 closes it
            (side . bottom)
            (slot . 1)
            (window-height . 0.25)
@@ -448,25 +442,18 @@
 
 (use-package project
   :ensure nil ; built in package
-  :init
-    ; (require 'project)
+  :config
     (setq project-mode-line t)
     (setq project-vc-ignores '("target/" "bin/" "obj/"))
     (setq project-vc-extra-root-markers project-root-markers)
 )
 
 ;; ====================================
-;; Auto formatter
+;; Auto formatter: Used by format-all-buffer
 ;; ====================================
 (use-package format-all
-  :preface
-  (defun my/format-code ()
-    "Auto-format whole buffer."
-    (interactive)
-    (if (derived-mode-p 'prolog-mode)
-        (prolog-indent-buffer)
-      (format-all-buffer)))
-  :config
-  (global-set-key (kbd "M-F") #'my/format-code)
-  (add-hook 'prog-mode-hook #'format-all-ensure-formatter))
-
+  :commands (format-all-mode format-all-buffer)
+  :init
+    (add-hook 'format-all-after-format-functions
+      (lambda (formatter status) (message "Buffer is formatted using %s status=%s" formatter status)))
+)

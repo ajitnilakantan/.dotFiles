@@ -94,10 +94,11 @@ function emacsw() {emacs @args}
 
 function vim()
 {
-    $local:rcfile = (Join-Path $ThisFolder '_vimrc')
     if (Get-Command "nvim.exe" -ErrorAction Ignore) {
-        Start-Process -NoNewWindow -Wait "$($(Get-Command 'nvim.exe').Path)" $("-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
+        $local:rcfile = (Join-Path $ThisFolder 'nvim/init.lua')
+        Start-Process -NoNewWindow -Wait -Environment @{ XDG_CONFIG_HOME="$($HOME)/.config"; XDG_DATA_HOME="$($HOME)/.local/share"; XDG_STATE_HOME="$($HOME)/.local/state"; XDG_CACHE_HOME="$($HOME)/.cache"; } "$($(Get-Command 'nvim.exe').Path)" $("-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
     } else {
+        $local:rcfile = (Join-Path $ThisFolder '_vimrc')
         Start-Process -NoNewWindow -Wait "$($(Get-Command 'vim.exe').Path)" $("-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
     }
 }
@@ -106,10 +107,11 @@ function vi() {vim @args}
 
 function gvim()
 {
-    $local:rcfile = (Join-Path $ThisFolder '_vimrc')
     if (Get-Command "neovide.exe" -ErrorAction Ignore) {
-        Start-Process -NoNewWindow "$($(Get-Command 'neovide.exe').Path)" $("--fork","--","-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
+        $local:rcfile = (Join-Path $ThisFolder 'nvim/init.lua')
+        Start-Process -NoNewWindow -Environment @{ XDG_CONFIG_HOME="$($HOME)/.config"; XDG_DATA_HOME="$($HOME)/.local/share"; XDG_STATE_HOME="$($HOME)/.local/state"; XDG_CACHE_HOME="$($HOME)/.cache"; } "$($(Get-Command 'neovide.exe').Path)" $("--fork",$args,"--","-u",$local:rcfile | Join-String -DoubleQuote -Separator ' ')
     } else {
+        $local:rcfile = (Join-Path $ThisFolder '_vimrc')
         Start-Process -NoNewWindow "$($(Get-Command 'gvim.exe').Path)" $("-u",$local:rcfile,$args | Join-String -DoubleQuote -Separator ' ')
     }
 }
