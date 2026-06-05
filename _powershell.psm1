@@ -20,7 +20,7 @@ $PSDefaultParameterValues["Out-File:Encoding"]="utf8"
 Set-PSReadlineKeyHandler -Chord Tab -Function MenuComplete
 
 # Starship prompt
-if (Get-Command starship) {
+if (Get-Command starship -ErrorAction Ignore) {
    Invoke-Expression (&starship init powershell)
 }
 

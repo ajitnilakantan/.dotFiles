@@ -12,8 +12,21 @@ fi
 
 echo this="$ThisFolder"
 
+is_console() {
+    # Check macOS native WindowServer
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        if ioreg -n WindowServer -r | grep -q "WindowServer"; then
+            return 1 # It is GUI
+        fi
+    # Check Linux/WSL2/X11/Wayland
+    elif [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+        return 1 # It is GUI
+    fi
+
+    return 0 # It is Console
+}
+
 function cls() { clear; }
-alias dev='cd ~/dev'
 function dir() { ls "$@"; }
 function del() { rm -i "$@"; }
 function move() { mv -i "$@"; }
@@ -36,7 +49,7 @@ function w () { if [[ $* =~ [.] ]]; then w="$*"; else w="$*".com; fi; echo "$w";
 # Run nvim if available
 function vim () {
     if type -a nvim > /dev/null 2>&1; then
-        command nvim -u ~/.dotFiles/_vimrc "$@"
+        XDG_CONFIG_HOME="$HOME/.config" XDG_DATA_HOME="$HOME/.local/share" XDG_STATE_HOME="$HOME/.local/state" XDG_CACHE_HOME="$HOME/.cache" command nvim -u ~/.dotFiles/nvim/init.lua "$@"
     else
         command vim -u ~/.dotFiles/_vimrc "$@"
     fi
@@ -48,7 +61,7 @@ function vi () {
 
 function gvim () {
     if type -a neovide > /dev/null 2>&1; then
-        \neovide --fork -- -u ~/.dotFiles/_vimrc "$@"
+        XDG_CONFIG_HOME="$HOME/.config" XDG_DATA_HOME="$HOME/.local/share" XDG_STATE_HOME="$HOME/.local/state" XDG_CACHE_HOME="$HOME/.cache" command neovide --fork -- -u ~/.dotFiles/nvim/init.lua "$@"
     else
         command gvim -u ~/.dotFiles/_vimrc "$@"
     fi
@@ -56,10 +69,14 @@ function gvim () {
 
 # Set init-directory for emacs
 function emacs() {
-    command emacs --init-directory ~/.dotFiles/emacs/ -nw "$@";
-}
-function emacsw() {
-    command emacs --init-directory ~/.dotFiles/emacs/ "$@" & disown;
+    if is_console; then
+        echo "Running in terminal mode"
+        emacs --init-directory ~/.dotFiles/emacs/ -nw "$@"
+    else
+        echo "Running in windowed mode"
+        # Logic for macOS vs Linux GUI
+        [[ "$OSTYPE" == "darwin"* ]] && open -a Emacs --init-directory ~/.dotFiles/emacs/ "$@" || emacs --init-directory ~/.dotFiles/emacs/ "$@" & disown;
+    fi
 }
 
 # function gitdiff() { git fetch origin ; git diff --name-only master origin/master; git diff @ '@{upstream}'; }
