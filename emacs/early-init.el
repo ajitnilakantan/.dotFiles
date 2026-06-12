@@ -22,9 +22,6 @@
 ;; If an `.el' file is newer than its corresponding `.elc', load the `.el'.
 (setq load-prefer-newer t)
 
-;; Write any customizations to a temp file so they are discarded.
-;(setq custom-file (make-temp-file "custom-" nil ".el"))
-
 ;; Faster to disable these here (before they've been initialized)
 (push '(menu-bar-lines . 0) default-frame-alist)
 (push '(tool-bar-lines . 0) default-frame-alist)
@@ -38,10 +35,6 @@
   (set-face-attribute 'default nil :background "#111111" :foreground "white")
 )
 (setq frame-background-mode 'dark)
-
-;; Default frame settings. This is actually maximized, not full screen.
-;(push '(fullscreen . maximized) initial-frame-alist)
-; ZZ (push '(ns-transparent-titlebar . t) default-frame-alist)
 
 ;; Resizing the Emacs frame can be a terribly expensive part of changing the
 ;; font. By inhibiting this, we easily halve startup times with fonts that are

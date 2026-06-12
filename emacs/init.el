@@ -58,21 +58,16 @@
 (setq custom-file "~/.config/emacs/custom.el")
 (load custom-file :no-error-if-file-is-missing)
 
-;; Disable theme on Terminal and enable Mouse Support
-(unless (display-graphic-p)
-  (xterm-mouse-mode 1)
-  (if (eq system-type 'window-nt)
-      (disable-theme (car custom-enabled-themes))))
-
 ;; For emacs-31
-(dolist (content `(user-emacs-directory 
-                   ,(concat user-emacs-directory "lsp")))
+(dolist
+  (content `(user-emacs-directory ,(concat user-emacs-directory "lsp")))
   (add-to-list 'trusted-content content))
 
 ;; Set to help debug errors
-(setq debug-on-error t)
+; (setq debug-on-error t)
 
 ;; Use-package infra
+;; If you get melpa errors, try M-x package-refresh-contents
 (my/load "packages")
 
 ;; Basic editor configuration

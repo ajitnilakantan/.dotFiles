@@ -3,7 +3,6 @@
 ;; Bring in package utilities so we can install packages from the web.
 ;; update with package-refresh-contents and package-upgrade-all
 
-
 (setq package-user-dir (expand-file-name "emacs/elpa/" (xdg-cache-home)))
 
 ; (setq use-package-always-ensure nil) ; Don't auto-download package if not exists
@@ -30,10 +29,10 @@
         ("gnu-elpa" . 2)
         ("nongnu" . 1)))
 
+(require 'use-package) ; built-in package
 (package-initialize)
 ;; If there are no archived package contents, refresh them
 (unless package-archive-contents (package-refresh-contents))
-(require 'use-package) ; built-in package
 
 (use-package auto-package-update
    :ensure t
@@ -115,3 +114,5 @@
 
 ;; For the :delight keyword in use-package
 (use-package delight :ensure t)
+
+(provide 'packages)

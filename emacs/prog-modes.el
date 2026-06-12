@@ -11,6 +11,28 @@
 
 (use-package fsharp-mode
   :hook ((fsharp-mode fsharp-ts-mode) . eglot-ensure)
+  :hook
+    ;; Disable External Completions in FSAC
+    ((fsharp-mode fsharp-ts-mode) .
+      (lambda ()
+        (setq-local eglot-workspace-configuration
+                    '((:FSharp . (:ExternalAutocomplete :json-false))))))
+  ;:config
+    ;(defun my/filter-fsharp-completions ()
+    ;  "Prune out non-local boilerplate completions from FSAC."
+    ;  (when (derived-mode-p 'fsharp-mode)
+    ;    (cape-capf-predicate
+    ;     #'eglot-completion-at-point
+    ;     (lambda (cand)
+    ;       (let ((kind (get-text-property 0 :completion-kind cand)))
+    ;         ;; Drop Module or Snippet suggestions if they are drowning out your local scope
+    ;         (not (memq kind '(Module Snippet))))))))
+
+    ;(add-hook 'eglot-managed-mode-hook
+    ;          (lambda ()
+    ;            (when (derived-mode-p 'fsharp-mode)
+    ;              (remove-hook 'completion-at-point-functions #'eglot-completion-at-point t)
+    ;              (add-hook 'completion-at-point-functions #'my/filter-fsharp-completions nil t))))
 )
 
 (use-package go-mode
@@ -26,10 +48,8 @@
 (use-package markdown-mode
   ;; These extra modes help clean up the Markdown editing experience.
   ;; `visual-line-mode' turns on word wrap and helps editing commands
-  ;; work with paragraphs of text. `flyspell-mode' turns on an
-  ;; automatic spell checker.
-  :hook ((markdown-mode . visual-line-mode)
-         (markdown-mode . flyspell-mode))
+  ;; work with paragraphs of text. 
+  :hook (markdown-mode . visual-line-mode)
   :custom
     (markdown-command "multimarkdown")
   :mode ("\\.md\\'")
@@ -93,30 +113,9 @@
 ;; ====================================
 ;; OTHER HIGHLIGHTING
 ;; ====================================
-(use-package highlight-indent-guides
-  :after rainbow-delimiters
-  :preface
-  ;; set the color of the indent indicator to face of rainbow delimiter depth
-    (defun rainbow-highlighter (level responsive display)
-      (intern (format "rainbow-delimiters-depth-%d-face" (+ (mod level 9) 1))))
-  :config
-    (setq highlight-indent-guides-auto-odd-face-perc 25)
-    (setq highlight-indent-guides-auto-even-face-perc 25)
-    (setq highlight-indent-guides-auto-character-face-perc 30)
-    (if window-system
-      (progn
-        (setq highlight-indent-guides-method 'bitmap)
-        (setq highlight-indent-guides-responsive 'top)
-        (setq highlight-indent-guides-bitmap-function 'highlight-indent-guides--bitmap-dots))
-      (progn
-        (setq highlight-indent-guides-method 'column)
-        (setq highlight-indent-guides-auto-enabled nil)
-        (setq highlight-indent-guides-responsive nil))
-    )
-  :hook
-    (prog-mode . highlight-indent-guides-mode)
-    (text-mode . highlight-indent-guides-mode)
-)
+(use-package indent-bars
+  :hook (prog-mode . indent-bars-mode))
+
 
 ;; ====================================
 ;; TODO Hightlight (Comment-tags)
@@ -142,8 +141,24 @@
 ;; Basic Eglot configuration
 (use-package eglot
   :ensure nil ; Use the built-in version
+  :preface
+  (defun my-eglot-ensure-if-server-exists ()
+    "Call `eglot-ensure' if configured and installed, otherwise message why it skipped."
+    (require 'eglot) ; Ensure internal functions like eglot--lookup-mode are loaded
+    (let ((server-info (eglot--lookup-mode major-mode)))
+      (if (not server-info)
+          (message "Eglot: No server configured for %s" major-mode)
+        (let* ((contact (cdr server-info))
+               (executable (cond ((listp contact) (car contact))
+                                 ((symbolp contact) (symbol-name contact))
+                                 ((stringp contact) contact)))
+               (cmd-name (if (stringp executable) executable (symbol-name executable))))
+          (if (executable-find cmd-name)
+              (eglot-ensure)
+            (message "Eglot: Server configured (%s) but executable '%s' not found in PATH" 
+                     major-mode cmd-name))))))
   :hook
-    ((prog-mode . eglot-ensure)) ; Activate Eglot in programming modes
+    ((prog-mode . my-eglot-ensure-if-server-exists)) ; Activate Eglot in programming modes
 )
 
 ;; Flymake is used automatically by Eglot, no extra config typically needed
@@ -155,7 +170,7 @@
 (use-package eldoc
   :ensure nil ; Use the built-in version
   :defer t ; Defer loading
-  :diminish t
+  :diminish eldoc-mode
 )
 
 ;; ====================================
@@ -194,7 +209,6 @@
      ("<left-fringe> <mouse-1>" . #'flymake-show-buffer-diagnostics)
     )
 )
-
 
 ;; ====================================
 ;; Eldoc customization
@@ -278,26 +292,39 @@
         (apply oldfun cmd args)))
     (advice-add 'hl-todo-flymake :around 'my/ignore-errors)
     (advice-add 'eglot--hover-info :around 'my/ignore-errors)
+    (add-hook 'context-menu-functions #'eglot-context-menu)
 )
+
 (use-package eglot
   :ensure nil ; built in package
 
   :bind (("s-<mouse-1>" . eglot-find-implementation)
          ("C-c ." . eglot-code-action-quickfix))
+  :bind (:map eglot-mode-map
+         ("C-c l a" . eglot-code-actions)
+         ("C-c l r" . eglot-rename)
+         ("C-c l f" . eglot-format)
+         ("C-c l d" . eldoc)
+         ("C-c l o" . eglot-code-action-organize-imports)
+         ("C-c l h" . eglot-inlay-hints-mode)
+         ("C-c l q" . eglot-shutdown-all)
+         ("<f2>"    . eglot-rename)
+         ("<f12>"   . xref-find-definitions)
+         ("S-<f12>" . xref-find-references)
+        )
   :custom
     (eglot-extend-to-xref t)     ; activate Eglot in referenced non-project files
     (eglot-events-buffer-size 0) ; disable events logging, it should be enabled only when debugging LSP servers
     (eglot-sync-connect-nil 0)   ; disable UI freeze when opening big files
     (eglot-connect-timeout nil)  ; never timeout
-    (eglot-autoshutdown t)
-    (eglot-send-changes-idle-time 3)
+    (eglot-autoshutdown t)       ; Kill LSP server when closing last file buffer
+    (eglot-send-changes-idle-time 0.1) ; Faster updates
     (flymake-no-changes-timeout 5)
     ;; Speeds up rendering
     (setq eglot-prefer-plaintext t)
     (setq eglot-ignored-server-capabilities
-        ;; the things we actually want are uncommented here. Weird
-        ;; way to do it, but ok.
-    '(
+      ;; the things we actually want are commented here. Weird way to do it, but ok.
+      '(
         ;:hoverProvider ;(provides async type info, would like this to be manual)
         ;:completionProvider ; (provides company with completions)
         ;:signatureHelpProvider ; (eldoc integration, unsure entirely what it does)
@@ -320,13 +347,13 @@
         :foldingRangeProvider
         :executeCommandProvider
         :inlayHintProvider
-     )
+       )
     )
 
   :config
     (fset #'jsonrpc--log-event #'ignore)  ; massive perf boost---don't log every event
     (setq eglot-report-progress nil)  ; makes modeline flash less
-    ; (add-to-list 'eglot-stay-out-of 'flymake)
+    (add-to-list 'eglot-stay-out-of 'flymake)  ; Prevent conflict
   :hook
     ;; A bit intrusive
     (eglot-managed-mode . (lambda () (eglot-inlay-hints-mode -1)))
@@ -350,7 +377,7 @@
     ;; Sometimes you need to tell Eglot where to find the language server
     ; (add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio")))
     (add-to-list 'eglot-server-programs '((fsharp-mode  fsharp-ts-mode) .
-       ("fsautocomplete"
+       ("fsautocomplete" "--adaptive-lsp-server-enabled"
         :initializationOptions (
           :AutomaticWorkspaceInit t
           :UnnecessaryParenthesesAnalyzer nil
@@ -361,7 +388,8 @@
       )
     ))
     (add-to-list 'eglot-server-programs '((go-mode  go-ts-mode) . ("gopls" )))
-    (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("ruff" "server" "--preview")))
+    ; (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("ruff" "server" "--preview")))
+    (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("ty" "server")))
     (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
        ("rust-analyzer"
         :initializationOptions (
@@ -379,16 +407,17 @@
 (use-package emacs
   :init
   ;; Increase the number of available slots per side (default is 2)
-  (setq window-sides-slots '(0 0 1 2)) ; (left top right bottom)
+  (setq window-sides-slots '(1 1 1 1)) ; (left top right bottom)
   :config
   (setq display-buffer-alist
         `(;; 1. Help buffers on the RIGHT sidebar
-          ("\\*Help\\*"
+          ("\\*\\(Help\\|which-key\\)\\*"
            (display-buffer-in-side-window)
            (side . right)
            (slot . 0)
            (window-width . 0.3)
-           (window-parameters . ((no-delete-other-windows . t))))
+           (display-buffer-reuse-window display-buffer-pop-up-window)
+           (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t))))
 
           ;; 2. Compilation/Shells at the BOTTOM-LEFT (Slot -1)
           ("\\*\\(compilation\\|shell\\|vterm\\)\\*"
@@ -396,7 +425,8 @@
            (side . bottom)
            (slot . -1)
            (window-height . 0.25)
-           (window-parameters . ((no-delete-other-windows . t))))
+           (display-buffer-reuse-window display-buffer-pop-up-window)
+           (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t))))
 
           ;; 3. ElDoc at the BOTTOM-RIGHT (Slot 1)
           ("\\*eldoc\\*"
@@ -406,7 +436,7 @@
            (slot . 1)
            (window-height . 0.25)
            (display-buffer-reuse-window display-buffer-pop-up-window)
-           (window-parameters . ((no-delete-other-windows . t))))
+           (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t))))
 
           ;; 4. Flymake at the BOTTOM-RIGHT (Slot 1)
           ("\\*Flymake diagnostics"
@@ -416,7 +446,7 @@
            (slot . 1)
            (window-height . 0.25)
            (display-buffer-reuse-window display-buffer-pop-up-window)
-           (window-parameters . ((no-delete-other-windows . t)))
+           (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t)))
           )
 )))
 
@@ -457,3 +487,6 @@
     (add-hook 'format-all-after-format-functions
       (lambda (formatter status) (message "Buffer is formatted using %s status=%s" formatter status)))
 )
+
+
+(provide 'prog-modes)

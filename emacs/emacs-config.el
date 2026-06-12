@@ -1,5 +1,13 @@
 ;;; emacs-config.el --- Emacs configuration -*- lexical-binding: t -*-
 
+;; Theme
+(use-package batppuccin
+  :demand t  ; Ensures it loads at startup
+  :config
+  ; (mapc #'disable-theme custom-enabled-themes) ; Disable all themes first to avoid layering
+  (load-theme 'batppuccin-macchiato t)
+)
+
 ;;;;; Basic emacs configuration
 (use-package emacs
   :ensure nil ; built-in package
@@ -20,6 +28,13 @@
 
   ;; Disable Welcome Screen
   (inhibit-startup-screen t)
+
+  ;; Seems to improve performancs
+  (inhibit-compacting-font-caches t)
+
+  ;; defer fontification while there is input pending -- this keeps
+  ;; typing responsive in large/complex buffers where font-lock is slow
+  (setq redisplay-skip-fontification-on-input t)
 
   ;; Hide cursor in not focus windows
   (cursor-in-non-selected-windows nil)
@@ -62,26 +77,28 @@
     (set-selection-coding-system 'utf-8))
 
   ; set up unicode symbols (order matters!)
-  (set-fontset-font
-   t
-   'emoji
-   (cond
-    ((member "Apple Color Emoji" (font-family-list)) "Apple Color Emoji")
-    ((member "Noto Color Emoji" (font-family-list)) "Noto Color Emoji")
-    ((member "Noto Emoji" (font-family-list)) "Noto Emoji")
-    ((member "Segoe UI Emoji" (font-family-list)) "Segoe UI Emoji")  ; 🧗
-    ((member "Symbola" (font-family-list)) "Symbola")))
-  (set-fontset-font
-   t
-   'symbol
-   (cond
-    ((member "Segoe UI Symbol" (font-family-list)) "Segoe UI Symbol")
-    ((member "Apple Symbols" (font-family-list)) "Apple Symbols")
-    ((member "Symbola" (font-family-list)) "Symbola")))
-  ; nice on windows...
-  (cond
-    ((eq system-type 'windows-nt)
-     (set-fontset-font t '(#x1F300 . #x1F5FF) "Segoe UI Symbol")))  ; 🔁, Miscellaneous Symbols and Pictographs
+  (if (display-graphic-p)
+    (progn
+      (set-fontset-font
+       t
+       'emoji
+       (cond
+        ((member "Apple Color Emoji" (font-family-list)) "Apple Color Emoji")
+        ((member "Noto Color Emoji" (font-family-list)) "Noto Color Emoji")
+        ((member "Noto Emoji" (font-family-list)) "Noto Emoji")
+        ((member "Segoe UI Emoji" (font-family-list)) "Segoe UI Emoji")  ; 🧗
+        ((member "Symbola" (font-family-list)) "Symbola")))
+      (set-fontset-font
+       t
+       'symbol
+       (cond
+        ((member "Segoe UI Symbol" (font-family-list)) "Segoe UI Symbol")
+        ((member "Apple Symbols" (font-family-list)) "Apple Symbols")
+        ((member "Symbola" (font-family-list)) "Symbola")))
+      ; nice on windows...
+      (cond
+        ((eq system-type 'windows-nt)
+         (set-fontset-font t '(#x1F300 . #x1F5FF) "Segoe UI Symbol")))))  ; 🔁, Miscellaneous Symbols and Pictographs
 
   ;; Alt Left-right-up-down to switch windows
   (windmove-default-keybindings 'meta)
@@ -110,7 +127,7 @@
 
   ;; Automatically reread from disk if the underlying file changes
   (setq auto-revert-interval 1)
-  (setq auto-revert-check-vc-info t)
+  (setq auto-revert-check-vc-info nil) ; active checking of version control status. Slows down emacs
   (global-auto-revert-mode)
 
 
@@ -173,10 +190,11 @@
      (t
       (keyboard-quit))))
   :bind (
-     ("<backtab>" . #'indent-relative)
-     ("C-."       . #'set-mark-command) ; set mark
+     ;("<backtab>" . #'indent-relative)
+     ;("<backtab>" . #'unindent-for-tab-command)
+     ; ("C-."       . #'set-mark-command) ; set mark
      ("C-c x r"   . (lambda () (interactive) (load-file user-init-file)))  ; reload init.el
-     ("C-g"       . #'my/keyboard-quit-dwim) ; cancel operation
+     ; ("C-g"       . #'my/keyboard-quit-dwim) ; cancel operation
      ("C-x C-b"   . #'buffer-menu)  ; instead of list-buffers, replace current window
      ("C-x 1"     . #'my/delete-other-windows)  ; delete other windows
      ("C-x n"     . (lambda () (interactive) (select-window (next-window))))  ; next window
@@ -186,43 +204,29 @@
      ("M-C-f"     . #'my/match-paren)  ; matching brackets
      ("M-["       . #'backward-sexp)
      ("M-]"       . #'forward-sexp)
-     ("s-a"       . #'mark-whole-buffer)
-     ("s-c"       . #'ns-copy-including-secondary)
-     ("s-w"       . #'ns-copy-including-secondary)
-     ("s-v"       . 'yank)
-     ("s-x"       . 'kill-region)
+     ;("s-a"       . #'mark-whole-buffer)
+     ;("s-c"       . #'ns-copy-including-secondary)
+     ;("s-w"       . #'ns-copy-including-secondary)
+     ;("s-v"       . #'yank)
+     ;("s-x"       . #'kill-region)
+     ("C-a"       . #'beginning-of-line) ; move to logical lines in visual-line-mode
+     ("C-e"       . #'end-of-line) ; move to logical lines in visual-line-mode
+     ("C-n"       . #'next-logical-line) ; move to logical lines in visual-line-mode
+     ("C-p"       . #'previous-logical-line) ; move to logical lines in visual-line-mode
     )
 )
 
 (use-package emacs
   :ensure nil ; built-in package
   :config
-  ; Indent options
-  (setopt tab-always-indent 'complete) ; Indents first, then performs completion if pressed again.
-  (setopt tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
-  (setopt indent-tabs-mode nil) ; Use spaces for indentation
-  (setopt tab-width 4) ; Display tabs as 4 columns wide
-  (setopt standard-indent 4)
-
-  ; Completion options
-  (setopt enable-recursive-minibuffers t)                ; Use the minibuffer whilst in the minibuffer
-  (setopt completion-cycle-threshold 1)                  ; TAB cycles candidates
-  (setopt completions-detailed t)                        ; Show annotations
-
-  (setopt completion-styles '(basic initials substring)) ; Different styles to match input to candidates
-
-  (setopt completion-auto-help 'always)                  ; Open completion always; `lazy' another option
-  (setopt completions-max-height 20)                     ; This is arbitrary
-  (setopt completions-format 'one-column)
-  (setopt completions-group t)
-  (setopt completion-auto-select 'second-tab)            ; Much more eager
-  (setopt completion-auto-select t)                     ; See `C-h v completion-auto-select' for more possible values
-
-  (keymap-set minibuffer-mode-map "TAB" 'minibuffer-complete) ; TAB acts more like how it does in the shell
-
   ;; Mode line information
   (setopt line-number-mode t)                        ; Show current line in modeline
   (setopt column-number-mode t)                      ; Show column as well
+  ;; Customize Modeline Faces
+  (custom-set-faces
+   '(mode-line ((t (:background "gray30" :inverse-video nil))))
+   '(mode-line-inactive ((t (:background "gray25" :inverse-video nil)))))
+  (set-face-attribute 'mode-line nil :box nil)
 
   (setopt show-trailing-whitespace nil)      ; By default, don't underline trailing spaces
   (setopt indicate-buffer-boundaries 'left)  ; Show buffer top and bottom in the margin
@@ -240,7 +244,6 @@
 
   ;; Show the tab-bar as soon as tab-bar functions are invoked
   (setopt tab-bar-show 1)
-
 )
 
 (provide 'emacs-config)
