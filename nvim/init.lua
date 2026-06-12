@@ -20,8 +20,11 @@ vim.g.maplocalleader = " "
 
 -- General
 vim.opt.number = true -- Line numbers
-vim.opt.relativenumber = true -- Relative line numbers
+vim.opt.relativenumber = false -- Relative line numbers
 vim.opt.cursorline = true -- Highlight current line
+vim.opt.ignorecase = true -- Required for smartcase
+vim.opt.smartcase = true -- Smartcase search
+
 
 -- Indentation
 vim.opt.tabstop = 4 -- Tab width
@@ -30,6 +33,9 @@ vim.opt.softtabstop = 4 -- Soft tab stop
 vim.opt.expandtab = true -- Use spaces instead of tabs
 vim.opt.smartindent = true -- Smart auto-indenting
 vim.opt.autoindent = true -- Copy indent from current line
+vim.opt.textwidth = 0 -- Prevent automatic line break insertion
+vim.opt.formatoptions:remove("c") -- Prevent auto line break for comments
+vim.opt.formatoptions:remove("t")
 
 -- Mouse
 vim.opt.mouse = "a" -- Enable mouse support
@@ -98,6 +104,11 @@ vim.opt.guicursor = {
 -- Basic keymap
 vim.keymap.set("n", "Y", "yy", { desc = "Yank whole line" })
 
+-- Delete and change without cutting
+vim.keymap.set({'n', 'v'}, 's', '"_s')
+vim.keymap.set({'n', 'v'}, 'c', '"_c')
+vim.keymap.set({'n', 'v'}, 'C', '"_C')
+
 -- 2. PLUGIN MANAGEMENT (Using Neovim 0.12 built-in vim.pack)
 -- Plugins are added to the runtimepath. You must have these installed
 -- in your site/pack/vendor/start/ directory or managed via vim.pack.add()
@@ -110,18 +121,45 @@ local plugins = {
 
 vim.pack.add(plugins, { confirm = false })
 
--- 3. WHICH-KEY CONFIGURATION
+-- 3 WHICH-KEY CONFIGURATION
 local wk = require("which-key")
 wk.setup({
-  spec = {
-    { "<leader>s", group = "[S]earch", icon = { color = "green" } },
-  },
-  layout = {
-    width = { min = 20, max = 50 }, -- minimum and maximum width of the columns
-    spacing = 3, -- spacing between columns
-    columns = 2, -- FORCE maximum 2 columns
-  },
+{
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    opts = {
+      -- Choose layout preset: "classic", "modern", or "helix"
+      preset = "modern", 
+      -- Your custom groupings go here
+      spec = {
+        { "<leader>f", group = "Find/File" },
+        { "<leader>g", group = "Git" },
+        { "<leader>b", group = "Buffers" },
+      },
+    },
+    keys = {
+      {
+        "<leader>?",
+        function()
+          require("which-key").show({ global = false })
+        end,
+        desc = "Buffer Local Keymaps",
+      },
+    },
+  }
 })
+
+-- wk.setup({
+--   spec = {
+--     -- { "<leader>?", group = "[S]earch", icon = { color = "green" } },
+--     { "<leader>?", group = "[S]earch" },
+--   },
+--   layout = {
+--     width = { min = 20, max = 50 }, -- minimum and maximum width of the columns
+--     spacing = 3, -- spacing between columns
+--     columns = 2, -- FORCE maximum 2 columns
+--   },
+-- })
 wk.add({
   { "<leader>f", group = "Find (Telescope)" },
   { "<leader>l", group = "LSP" },
@@ -178,27 +216,65 @@ vim.api.nvim_create_autocmd("User", {
 })
 
 -- Tree-sitter (Added languages)
----@diagnostic disable-next-line: missing-fields
-require("nvim-treesitter.config").setup({
-  ensure_installed = {
-    "lua",
-    "vim",
-    "vimdoc",
-    "rust",
-    "python",
-    "go",
-    "c_sharp",
-    "fsharp", -- Added requested parsers
-  },
-  indent = { enable = true },
-  auto_install = true,
-  sync_install = false,
-  ignore_install = {},
-  highlight = {
-    enable = true,
-    additional_vim_regex_highlighting = false,
-  },
+-- 1. Initialize the tree-sitter plugin path configurations
+-- require("nvim-treesitter").setup({})
+
+vim.api.nvim_create_autocmd('FileType', {
+  callback = function(ev)
+    local lang = vim.treesitter.language.get_lang(ev.match)
+    local ts = require('nvim-treesitter')
+
+    -- Check if the parser is valid and available via nvim-treesitter
+    if vim.tbl_contains(ts.get_available(), lang) then
+      -- If the parser is not yet installed, download it synchronously
+      if not vim.tbl_contains(ts.get_installed(), lang) then
+        ts.install(lang):wait()
+      end
+      -- Start the Treesitter highlighting engine
+      vim.treesitter.start()
+      vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()" -- Enables native folding
+      vim.wo.foldmethod = "expr"
+      vim.opt.foldenable = false -- Initially unfolded
+    end
+  end,
 })
+-- -- 2. Define your target languages (your old ensure_installed list)
+-- local languages = { "lua", "vim", "vimdoc", "c_sharp", "fsharp", "go", "python", "rust", "javascript" }
+-- 
+-- -- 3. Download the parsers asynchronously on startup
+-- require("nvim-treesitter").install(languages)
+-- 
+-- -- 4. Enable native Neovim features for these languages automatically
+-- vim.api.nvim_create_autocmd("FileType", {
+--   pattern = languages,
+--   callback = function()
+--     vim.treesitter.start() -- Turns on native syntax highlighting
+--     vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()" -- Enables native folding
+--     vim.wo.foldmethod = "expr"
+--   end,
+-- })
+
+--  ---@diagnostic disable-next-line: missing-fields
+--  require("nvim-treesitter.config").setup({
+--    ensure_installed = {
+--      "lua",
+--      "vim",
+--      "vimdoc",
+--      "rust",
+--      "python",
+--      "go",
+--      "c_sharp",
+--      "fsharp", -- Added requested parsers
+--    },
+--    indent = { enable = true },
+--    auto_install = true,
+--    sync_install = false,
+--    ignore_install = {},
+--    highlight = {
+--      enable = true,
+--      additional_vim_regex_highlighting = false,
+--    },
+--  })
 
 -- 5. LSP CONFIGURATION (0.12 Native Style)
 -- Neovim 0.12 allows enabling servers directly if they are in your PATH
@@ -410,11 +486,11 @@ vim.api.nvim_create_autocmd("CursorHold", {
   end,
 })
 
--- Enable treesitter
-vim.api.nvim_create_autocmd("FileType", {
-  group = config_augroup,
-  pattern = { "<filetype>" },
-  callback = function()
-    vim.treesitter.start()
-  end,
-})
+-- -- Enable treesitter
+-- vim.api.nvim_create_autocmd("FileType", {
+--   group = config_augroup,
+--   pattern = { "<filetype>" },
+--   callback = function()
+--     vim.treesitter.start()
+--   end,
+-- })
