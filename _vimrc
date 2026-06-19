@@ -126,8 +126,6 @@ endif
 " == colorscheme
 set background=dark
 
-
-
 " See https://stackoverflow.com/questions/5172323/how-to-properly-extend-a-highlighting-group-in-vim
 highlight lspInlayHintsType cterm=italic gui=italic
 highlight clear MatchParen
@@ -260,18 +258,6 @@ map <S-Right> <C-w><Right>
 
 
 " == LSP
-if has('nvim')
-lua <<EOF
-  scriptFolder = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand('<sfile>:p')), ':h')
-  vim.opt.rtp:prepend(scriptFolder .. "/nvim")
-  dofile(scriptFolder .. '/nvim/_init.lua')
-  vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
-  dofile(scriptFolder .. '/nvim/_lsp.lua')
-  vim.opt.rtp:prepend(scriptFolder .. "/nvim/")
-  dofile(scriptFolder .. '/nvim/_custom.lua')
-EOF
-
-else
   if &term == 'xterm-256color'
     " More pleasant color scheme when you ssh to macos from windows
     if g:remoteSession
@@ -282,6 +268,9 @@ else
   else
     colorscheme darkblue
   endif
+  " Don't color empty lines differently
+  highlight EndOfBuffer ctermbg=NONE guibg=NONE
+
   """ Run :PlugInstall
   let s:mypath = fnamemodify(resolve(expand('<sfile>:p')), ':h')
   :execute 'set runtimepath+='.s:mypath.'/vim/'
@@ -316,7 +305,6 @@ else
   let g:lsp_inlay_hints_mode = { 'normal': ['always', '!curline'], 'insert': ['always', '!curline'],  }
   " Speeds up LSP
   let g:lsp_use_native_client = 1
-endif
 
 " You can embed vimscript in init.lua
 " vim.cmd [[
