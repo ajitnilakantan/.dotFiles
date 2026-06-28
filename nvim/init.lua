@@ -31,7 +31,7 @@ vim.opt.tabstop = 4 -- Tab width
 vim.opt.shiftwidth = 4 -- Indent width
 vim.opt.softtabstop = 4 -- Soft tab stop
 vim.opt.expandtab = true -- Use spaces instead of tabs
-vim.opt.smartindent = true -- Smart auto-indenting
+vim.opt.smartindent = false -- Disable smartindent, which ruins python hash comment alignment
 vim.opt.autoindent = true -- Copy indent from current line
 vim.opt.textwidth = 0 -- Prevent automatic line break insertion
 vim.opt.formatoptions:remove("c") -- Prevent auto line break for comments
@@ -190,6 +190,15 @@ require("bufferline").setup({
     buffer_close_icon = "\u{f00d}",
   },
 })
+
+-- INFO: Tree view of project files
+---@diagnostic disable-next-line: redefined-local
+local plugins = {
+  'https://github.com/nvim-tree/nvim-web-devicons', -- optional
+  'https://github.com/nvim-tree/nvim-tree.lua',
+}
+vim.pack.add(plugins, { confirm = false })
+require("nvim-tree").setup({})
 
 vim.filetype.add({
   extension = {
@@ -443,6 +452,28 @@ vim.api.nvim_create_autocmd("LspAttach", {
     })
   end,
 })
+
+vim.keymap.set("n", "<leader>lD", function()
+  -- Get all diagnostics for the current line
+  local line_diagnostics = vim.diagnostic.get(0, { lnum = vim.api.nvim_win_get_cursor(0)[1] - 1 })
+
+  if vim.tbl_isempty(line_diagnostics) then
+    vim.notify("No diagnostics found on this line", vim.log.levels.INFO)
+    return
+  end
+
+  -- Concatenate messages if there are multiple diagnostics on the same line
+  local messages = {}
+  for _, diagnostic in ipairs(line_diagnostics) do
+    table.insert(messages, diagnostic.message)
+  end
+
+  local result = table.concat(messages, "\n")
+
+  -- Copy to the system clipboard register (+)
+  vim.fn.setreg("+", result)
+  vim.notify("Copied diagnostic to clipboard!", vim.log.levels.INFO)
+end, { desc = "Copy line diagnostics to clipboard" })
 
 -- Workaround for bug https://github.com/neovim/neovim/issues/36257
 vim.api.nvim_create_autocmd('LspAttach', {
