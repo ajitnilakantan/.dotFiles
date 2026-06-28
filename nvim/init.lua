@@ -42,6 +42,8 @@ vim.opt.mouse = "a" -- Enable mouse support
 vim.opt.clipboard = vim.env.SSH_TTY and "" or "unnamedplus" -- Sync with system clipboard
 
 -- Gui
+vim.g.loaded_netrw = 1 -- disable netrw at the very start of your init.lua for nvim-tree
+vim.g.loaded_netrwPlugin = 1 -- disable netrw at the very start of your init.lua for nvim-tree
 vim.opt.termguicolors = true
 vim.opt.background = "dark"
 vim.pack.add { { src = "https://github.com/catppuccin/nvim", name = "catppuccin" } }
@@ -114,12 +116,22 @@ vim.keymap.set({'n', 'v'}, 'C', '"_C')
 -- Plugins are added to the runtimepath. You must have these installed
 -- in your site/pack/vendor/start/ directory or managed via vim.pack.add()
 ---@diagnostic disable-next-line: redefined-local
+
+-- Tree view of project files
+---@diagnostic disable-next-line: redefined-local
+local plugins = {
+  'https://github.com/nvim-tree/nvim-web-devicons', -- optional
+  'https://github.com/nvim-tree/nvim-tree.lua',
+}
+vim.pack.add(plugins, { confirm = false })
+require("nvim-tree").setup({})
+
+-- Which-key and telescope
 local plugins = {
   "https://github.com/nvim-telescope/telescope.nvim",
   "https://github.com/folke/which-key.nvim",
   "https://github.com/nvim-lua/plenary.nvim", -- Required for Telescope
 }
-
 vim.pack.add(plugins, { confirm = false })
 
 -- 3 WHICH-KEY CONFIGURATION
@@ -150,17 +162,6 @@ wk.setup({
   }
 })
 
--- wk.setup({
---   spec = {
---     -- { "<leader>?", group = "[S]earch", icon = { color = "green" } },
---     { "<leader>?", group = "[S]earch" },
---   },
---   layout = {
---     width = { min = 20, max = 50 }, -- minimum and maximum width of the columns
---     spacing = 3, -- spacing between columns
---     columns = 2, -- FORCE maximum 2 columns
---   },
--- })
 wk.add({
   { "<leader>f", group = "Find (Telescope)" },
   { "<leader>l", group = "LSP" },
@@ -168,9 +169,11 @@ wk.add({
 
 -- 4. TELESCOPE CONFIGURATION
 local builtin = require("telescope.builtin")
+local nvim_api = require("nvim-tree.api")
 vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Find Files" })
 vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Live Grep" })
 vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Buffers" })
+vim.keymap.set("n", "<leader>ft", nvim_api.tree.toggle, { desc = "Tree View" })
 vim.keymap.set("n", "<leader>vh", ":Telescope help_tags<CR>", { desc = "Fuzzy Help" })
 
 -- INFO: better statusline
@@ -191,15 +194,6 @@ require("bufferline").setup({
   },
 })
 
--- INFO: Tree view of project files
----@diagnostic disable-next-line: redefined-local
-local plugins = {
-  'https://github.com/nvim-tree/nvim-web-devicons', -- optional
-  'https://github.com/nvim-tree/nvim-tree.lua',
-}
-vim.pack.add(plugins, { confirm = false })
-require("nvim-tree").setup({})
-
 vim.filetype.add({
   extension = {
     fs = "fsharp",
@@ -207,6 +201,7 @@ vim.filetype.add({
     fsx = "fsharp",
   },
 })
+
 -- 5. Treesitter
 ---@diagnostic disable-next-line: redefined-local
 local plugins = {
@@ -226,9 +221,6 @@ vim.api.nvim_create_autocmd("User", {
 })
 
 -- Tree-sitter (Added languages)
--- 1. Initialize the tree-sitter plugin path configurations
--- require("nvim-treesitter").setup({})
-
 vim.api.nvim_create_autocmd('FileType', {
   callback = function(ev)
     local lang = vim.treesitter.language.get_lang(ev.match)
@@ -248,43 +240,6 @@ vim.api.nvim_create_autocmd('FileType', {
     end
   end,
 })
--- -- 2. Define your target languages (your old ensure_installed list)
--- local languages = { "lua", "vim", "vimdoc", "c_sharp", "fsharp", "go", "python", "rust", "javascript" }
--- 
--- -- 3. Download the parsers asynchronously on startup
--- require("nvim-treesitter").install(languages)
--- 
--- -- 4. Enable native Neovim features for these languages automatically
--- vim.api.nvim_create_autocmd("FileType", {
---   pattern = languages,
---   callback = function()
---     vim.treesitter.start() -- Turns on native syntax highlighting
---     vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()" -- Enables native folding
---     vim.wo.foldmethod = "expr"
---   end,
--- })
-
---  ---@diagnostic disable-next-line: missing-fields
---  require("nvim-treesitter.config").setup({
---    ensure_installed = {
---      "lua",
---      "vim",
---      "vimdoc",
---      "rust",
---      "python",
---      "go",
---      "c_sharp",
---      "fsharp", -- Added requested parsers
---    },
---    indent = { enable = true },
---    auto_install = true,
---    sync_install = false,
---    ignore_install = {},
---    highlight = {
---      enable = true,
---      additional_vim_regex_highlighting = false,
---    },
---  })
 
 -- 5. LSP CONFIGURATION (0.12 Native Style)
 -- Neovim 0.12 allows enabling servers directly if they are in your PATH
@@ -518,11 +473,3 @@ vim.api.nvim_create_autocmd("CursorHold", {
   end,
 })
 
--- -- Enable treesitter
--- vim.api.nvim_create_autocmd("FileType", {
---   group = config_augroup,
---   pattern = { "<filetype>" },
---   callback = function()
---     vim.treesitter.start()
---   end,
--- })
