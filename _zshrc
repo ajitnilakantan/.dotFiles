@@ -36,12 +36,16 @@ bindkey '[1;2D' backward-char # Shift left
 
 setopt interactivecomments
 
-# https://superuser.com/questions/49092/how-to-format-the-path-in-a-zsh-prompt
-setopt PROMPT_SUBST
-export PROMPT='%n%f@%F{yellow}%m%f %B%~%b %# '
-export PROMPT='%n%f@%F{yellow}%m%f %B%~%b %(?..%F{red})%#%f '
-if [[ "$TERM" == "dumb" ]]; then
-  PS1='$ '
+if type -a starship > /dev/null 2>&1; then
+    eval "$(starship init zsh)"
+else
+  # https://superuser.com/questions/49092/how-to-format-the-path-in-a-zsh-prompt
+  setopt PROMPT_SUBST
+  export PROMPT='%n%f@%F{yellow}%m%f %B%~%b %# '
+  export PROMPT='%n%f@%F{yellow}%m%f %B%~%b %(?..%F{red})%#%f '
+  if [[ "$TERM" == "dumb" ]]; then
+    PS1='$ '
+  fi
 fi
 
 # Load interactive aliases and functions

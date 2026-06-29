@@ -44,6 +44,7 @@ vim.opt.clipboard = vim.env.SSH_TTY and "" or "unnamedplus" -- Sync with system 
 -- Gui
 vim.opt.termguicolors = true
 vim.opt.background = "dark"
+vim.pack.add { { src = "https://github.com/catppuccin/nvim", name = "catppuccin" } }
 vim.cmd.colorscheme("catppuccin")
 vim.diagnostic.config({ underline = true })
 vim.diagnostic.config({
@@ -114,9 +115,9 @@ vim.keymap.set({'n', 'v'}, 'C', '"_C')
 -- in your site/pack/vendor/start/ directory or managed via vim.pack.add()
 ---@diagnostic disable-next-line: redefined-local
 local plugins = {
-  "nvim-telescope/telescope.nvim",
-  "folke/which-key.nvim",
-  "nvim-lua/plenary.nvim", -- Required for Telescope
+  "https://github.com/nvim-telescope/telescope.nvim",
+  "https://github.com/folke/which-key.nvim",
+  "https://github.com/nvim-lua/plenary.nvim", -- Required for Telescope
 }
 
 vim.pack.add(plugins, { confirm = false })
@@ -175,7 +176,7 @@ vim.keymap.set("n", "<leader>vh", ":Telescope help_tags<CR>", { desc = "Fuzzy He
 -- INFO: better statusline
 ---@diagnostic disable-next-line: redefined-local
 local plugins = {
-  "nvim-lualine/lualine.nvim",
+  "https://github.com/nvim-lualine/lualine.nvim",
   "https://github.com/akinsho/bufferline.nvim",
   "https://github.com/nvim-tree/nvim-web-devicons",
 }
@@ -200,7 +201,7 @@ vim.filetype.add({
 -- 5. Treesitter
 ---@diagnostic disable-next-line: redefined-local
 local plugins = {
-  "nvim-treesitter/nvim-treesitter",
+  "https://github.com/nvim-treesitter/nvim-treesitter",
 }
 vim.pack.add(plugins, { confirm = false })
 -- Create an autocommand to run TSUpdate on install/update
@@ -334,7 +335,7 @@ end
 
 ---@diagnostic disable-next-line: redefined-local
 local plugins = {
-  "neovim/nvim-lspconfig", -- Still helpful for default server definitions
+  "https://github.com/neovim/nvim-lspconfig", -- Still helpful for default server definitions
   -- NOTE: if you'd rather install the lsps through your OS package manager you
   -- can delete the next three mason-related lines and their setup calls below.
   -- see `:h lsp-quickstart` for more details.
