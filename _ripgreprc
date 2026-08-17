@@ -17,9 +17,13 @@
 web:*.{html,css,js}*
 
 # Using glob patterns to include/exclude files or folders
---glob=!git/* !node_module/*
+--glob=!.git/*
+--glob=!node_module/**
 
---glob=!ntuser.dat !ntuser.dat.log1 !ntuser.dat.log2 !/LOCK
+--glob=!ntuser.dat
+--glob=!ntuser.dat.log1
+--glob=!ntuser.dat.log2
+--glob=!/LOCK
 # or
 --glob
 !*/OneDrive/**

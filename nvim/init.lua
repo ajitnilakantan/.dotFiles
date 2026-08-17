@@ -176,6 +176,7 @@ vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Buffers" })
 vim.keymap.set("n", "<leader>ft", nvim_api.tree.toggle, { desc = "Tree View" })
 vim.keymap.set("n", "<leader>vh", ":Telescope help_tags<CR>", { desc = "Fuzzy Help" })
 
+
 -- INFO: better statusline
 ---@diagnostic disable-next-line: redefined-local
 local plugins = {
@@ -404,6 +405,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
       { "<leader>lR", vim.lsp.buf.references, desc = "Show References", opts },
       { "<leader>lr", vim.lsp.buf.rename, desc = "Rename Symbol", opts },
       { "<leader>lK", vim.lsp.buf.hover, desc = "Hover Docs", opts },
+      { "<leader>lq", function() vim.diagnostic.setqflist() end, desc = "Quickfix List", opts },
     })
   end,
 })
@@ -473,3 +475,21 @@ vim.api.nvim_create_autocmd("CursorHold", {
   end,
 })
 
+-- Update the quick fix list on changes in the buffer
+vim.api.nvim_create_autocmd("DiagnosticChanged", {
+  callback = function()
+    -- Check if a quickfix window is currently open
+    local qf_exists = false
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == "qf" then
+        qf_exists = true
+        break
+      end
+    end
+    
+    -- If open, refresh it with the latest diagnostics
+    if qf_exists then
+      vim.diagnostic.setqflist({ open = false })
+    end
+  end,
+})
