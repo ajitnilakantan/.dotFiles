@@ -44,7 +44,7 @@ vim.opt.clipboard = vim.env.SSH_TTY and "" or "unnamedplus" -- Sync with system 
 -- Gui
 vim.g.loaded_netrw = 1 -- disable netrw at the very start of your init.lua for nvim-tree
 vim.g.loaded_netrwPlugin = 1 -- disable netrw at the very start of your init.lua for nvim-tree
-vim.opt.termguicolors = true
+-- vim.opt.termguicolors = true
 vim.opt.background = "dark"
 vim.pack.add { { src = "https://github.com/catppuccin/nvim", name = "catppuccin" } }
 vim.cmd.colorscheme("catppuccin")
@@ -124,7 +124,22 @@ local plugins = {
   'https://github.com/nvim-tree/nvim-tree.lua',
 }
 vim.pack.add(plugins, { confirm = false })
-require("nvim-tree").setup({})
+require("nvim-tree").setup({
+  update_focused_file = {
+    enable = true, -- Automatically track current file
+    update_root = false, -- Change root if true (optional)
+  },
+  diagnostics = {
+    enable = true,
+    show_on_dirs = true, -- Displays icons on folders containing files with errors
+    icons = {
+      hint = "⚑",
+      info = "ℹ",
+      warning = "⚠",
+      error = "✘",
+    },
+  },
+})
 
 -- Which-key and telescope
 local plugins = {
@@ -175,7 +190,10 @@ vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Live Grep" })
 vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Buffers" })
 vim.keymap.set("n", "<leader>ft", nvim_api.tree.toggle, { desc = "Tree View" })
 vim.keymap.set("n", "<leader>vh", ":Telescope help_tags<CR>", { desc = "Fuzzy Help" })
-
+-- Cycle through colorschemes with live preview
+vim.keymap.set('n', '<leader>fc', '<cmd>Telescope colorscheme enable_preview=true<cr>', { desc = 'Telescope colorschemes with preview' })
+-- Quick standard colorscheme picker (no auto-preview)
+vim.keymap.set('n', '<leader>fC', '<cmd>Telescope colorscheme<cr>', { desc = 'Telescope colorschemes' })
 
 -- INFO: better statusline
 ---@diagnostic disable-next-line: redefined-local
@@ -240,6 +258,17 @@ vim.api.nvim_create_autocmd('FileType', {
       vim.opt.foldenable = false -- Initially unfolded
     end
   end,
+})
+
+-- Autocmd to check the local buffer working directory
+vim.api.nvim_create_autocmd("BufEnter", {
+    pattern = "*",
+    callback = function()
+        -- Only change directory if it's a normal, readable file on disk
+        if vim.bo.buftype == "" and vim.fn.expand("%:p") ~= "" then
+            vim.cmd("lcd " .. vim.fn.expand("%:p:h"))
+        end
+    end,
 })
 
 -- 5. LSP CONFIGURATION (0.12 Native Style)
@@ -358,6 +387,8 @@ local lsp_servers = {
   }, -- fsharp
   gopls = {}, -- golang
   rust_analyzer = {}, -- rust
+  ts_ls = {}, -- typescript
+  tsc = {}, -- typescript
   ty = {}, -- python
 }
 require("mason").setup()
@@ -486,10 +517,23 @@ vim.api.nvim_create_autocmd("DiagnosticChanged", {
         break
       end
     end
-    
+
     -- If open, refresh it with the latest diagnostics
     if qf_exists then
       vim.diagnostic.setqflist({ open = false })
     end
   end,
 })
+
+-- Add :MessagesBuffer command
+vim.api.nvim_create_user_command('MessagesBuffer', function()
+  vim.cmd('new')
+  vim.bo.buftype = 'nofile'
+  vim.bo.bufhidden = 'hide'
+  vim.bo.swapfile = false
+  local messages = vim.api.nvim_exec2('messages', { output = true }).output
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(messages, '\n'))
+end, {})
+
+-- Setup DAP
+require("dap");

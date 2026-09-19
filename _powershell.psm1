@@ -134,6 +134,21 @@ function frg {
     }
 }
 
+function scoop_diff {
+    # Run a "diff" of the currently installed scoop applications with the checked-in "Scoopfile.json"
+    $tmpFile = New-TemporaryFile
+    &scoop export | Out-File $tmpFile
+    Start-Process WinMergeU.exe -ArgumentList "$($Env:USERPROFILE)/.dotFiles/Scoopfile.json",$tmpFile.FullName -Wait
+    Remove-Item $tmpFile
+}
+
+function copy-safe([string]$src, [string]$dst)
+{
+    if ($src -and $dst -and -not (Test-Path -Path $dst)) {
+        Copy-Item -Path $src -Destination $dst -Verbose
+    }
+}
+
 Set-Alias -Name pd -Value Push-Location
 Set-Alias -Name po -Value Pop-Location
 
