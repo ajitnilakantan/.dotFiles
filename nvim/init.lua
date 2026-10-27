@@ -1,7 +1,16 @@
 -- vim:fileencoding=utf-8:foldmethod=marker
 -- ~/.dotFiles/nvim/init.lua
 
+-- Run :lua vim.pack.update()   -- to update plugins
+--     :checkheath              -- general health checkup
+
 -- 1. SETTINGS & OPTIONS
+
+-- Get the path of the current file and find its directory
+local current_dir = debug.getinfo(1).source:match("@(.*[/\\])") or "./"
+-- Append this directory to Lua's global search path
+package.path = current_dir .. "?.lua;" .. package.path
+
 
 -- Default font.  Type :set guifont=*   to see available fonts
 if vim.fn.has("gui_running") == 1 then
@@ -46,8 +55,17 @@ vim.g.loaded_netrw = 1 -- disable netrw at the very start of your init.lua for n
 vim.g.loaded_netrwPlugin = 1 -- disable netrw at the very start of your init.lua for nvim-tree
 -- vim.opt.termguicolors = true
 vim.opt.background = "dark"
-vim.pack.add { { src = "https://github.com/catppuccin/nvim", name = "catppuccin" } }
-vim.cmd.colorscheme("catppuccin")
+
+if vim.env.TERM_PROGRAM == "Apple_Terminal" then
+  -- MacOs terminal has issues with truecolor schemes
+  vim.opt.termguicolors = false
+  vim.opt.cursorline = false -- Highlight current line
+  vim.cmd.colorscheme("default")
+else
+  vim.pack.add { { src = "https://github.com/catppuccin/nvim", name = "catppuccin" } }
+  require("catppuccin").setup({ transparent_background = false, term_colors = true, })
+  vim.cmd.colorscheme("catppuccin-nvim")
+end
 vim.diagnostic.config({ underline = true })
 vim.diagnostic.config({
   float = {
@@ -89,7 +107,7 @@ vim.opt.autowrite = true -- Auto save
 vim.g.neovide_position_animation_length = 0
 vim.g.neovide_cursor_animation_length = 0
 vim.g.neovide_cursor_trail_size = 0
-vim.g.neovide_cursor_animate_in_insert_mode = false
+vim.g.meovide_cursor_animate_in_insert_mode = false
 vim.g.neovide_cursor_animate_command_line = false
 vim.g.neovide_scroll_animation_far_lines = 0
 vim.g.neovide_scroll_animation_length = 0
@@ -266,7 +284,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
     callback = function()
         -- Only change directory if it's a normal, readable file on disk
         if vim.bo.buftype == "" and vim.fn.expand("%:p") ~= "" then
-            vim.cmd("lcd " .. vim.fn.expand("%:p:h"))
+            vim.cmd(":silent! lcd " .. vim.fn.expand("%:p:h"))
         end
     end,
 })
@@ -536,4 +554,4 @@ vim.api.nvim_create_user_command('MessagesBuffer', function()
 end, {})
 
 -- Setup DAP
-require("dap");
+require("init-dap");

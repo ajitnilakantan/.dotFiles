@@ -45,8 +45,12 @@ git --version          # Will install xcode cli tools
 
 # Install brew
 # Brewfile created with:
-#   brew bundle dump --force --file=Brewfile
+#   brew bundle dump --force --file=~/.dotFiles/Brewfile
 brew bundle install --file=~/.dotFiles/Brewfile
+
+# Diff Brewfile (zsh)
+HOMEBREW_NO_AUTO_UPDATE=1 diff ~/.dotFiles/Brewfile  <(brew bundle dump  --force --file=- | sed 's/#.*//')
+
 
 # Brew diagnostics.   Follow instructions if any for brew link etc.
 brew doctor
