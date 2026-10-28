@@ -34,7 +34,6 @@ vim.opt.cursorline = true -- Highlight current line
 vim.opt.ignorecase = true -- Required for smartcase
 vim.opt.smartcase = true -- Smartcase search
 
-
 -- Indentation
 vim.opt.tabstop = 4 -- Tab width
 vim.opt.shiftwidth = 4 -- Indent width
@@ -62,8 +61,8 @@ if vim.env.TERM_PROGRAM == "Apple_Terminal" then
   vim.opt.cursorline = false -- Highlight current line
   vim.cmd.colorscheme("default")
 else
-  vim.pack.add { { src = "https://github.com/catppuccin/nvim", name = "catppuccin" } }
-  require("catppuccin").setup({ transparent_background = false, term_colors = true, })
+  vim.pack.add({ { src = "https://github.com/catppuccin/nvim", name = "catppuccin" } })
+  require("catppuccin").setup({ transparent_background = false, term_colors = true })
   vim.cmd.colorscheme("catppuccin-nvim")
 end
 vim.diagnostic.config({ underline = true })
@@ -90,6 +89,35 @@ vim.opt.listchars = { trail = "⋅", tab = "  ↦" }
 -- Fuzzy help
 vim.opt.wildoptions:append("fuzzy")
 
+-- Completion: show menu, don't preselect
+vim.opt.completeopt = { "menu", "noselect" }
+-- Tab mapping
+local check_backspace = function()
+  local col = vim.fn.col(".") - 1
+  return col == 0 or vim.fn.getline("."):sub(col, col):match("%s") ~= nil
+end
+
+vim.keymap.set("i", "<Tab>", function()
+  if vim.fn.pumvisible() == 1 then
+    return "<C-n>"
+  elseif not check_backspace() then
+    return "<C-n>" -- Triggers the native completion menu
+  else
+    return "<Tab>"
+  end
+end, { expr = true, noremap = true })
+vim.keymap.set("i", "<CR>", function()
+  -- Accept the currently selected completion item with Enter
+  if vim.fn.pumvisible() == 1 then
+    -- If an item is selected, confirm it. If no item is highlighted yet,
+    -- <C-y> will close the menu. If you prefer to always insert a newline
+    -- when nothing is highlighted, use: vim.fn.complete_info()['selected'] ~= -1
+    return "<C-y>"
+  else
+    return "<CR>"
+  end
+end, { expr = true, noremap = true })
+
 -- File handling
 vim.opt.backup = false -- Don't create backup files
 vim.opt.writebackup = false -- Don't create backup before writing
@@ -107,7 +135,7 @@ vim.opt.autowrite = true -- Auto save
 vim.g.neovide_position_animation_length = 0
 vim.g.neovide_cursor_animation_length = 0
 vim.g.neovide_cursor_trail_size = 0
-vim.g.meovide_cursor_animate_in_insert_mode = false
+vim.g.neovide_cursor_animate_in_insert_mode = false
 vim.g.neovide_cursor_animate_command_line = false
 vim.g.neovide_scroll_animation_far_lines = 0
 vim.g.neovide_scroll_animation_length = 0
@@ -126,9 +154,16 @@ vim.opt.guicursor = {
 vim.keymap.set("n", "Y", "yy", { desc = "Yank whole line" })
 
 -- Delete and change without cutting
-vim.keymap.set({'n', 'v'}, 's', '"_s')
-vim.keymap.set({'n', 'v'}, 'c', '"_c')
-vim.keymap.set({'n', 'v'}, 'C', '"_C')
+vim.keymap.set({ "n", "v" }, "s", '"_s')
+vim.keymap.set({ "n", "v" }, "c", '"_c')
+vim.keymap.set({ "n", "v" }, "C", '"_C')
+
+-- Paste from the star register (*) in insert mode (Ctrl-Shift-v)
+vim.keymap.set("i", "<C-S-v>", "<C-r>*", { noremap = true })
+
+-- For normal or visual mode: Ctrl+Shift+v to paste the * register
+vim.keymap.set("n", "<C-S-v>", '"*p', { noremap = true, silent = true })
+vim.keymap.set("v", "<C-S-v>", '"*p', { noremap = true })
 
 -- 2. PLUGIN MANAGEMENT (Using Neovim 0.12 built-in vim.pack)
 -- Plugins are added to the runtimepath. You must have these installed
@@ -138,8 +173,8 @@ vim.keymap.set({'n', 'v'}, 'C', '"_C')
 -- Tree view of project files
 ---@diagnostic disable-next-line: redefined-local
 local plugins = {
-  'https://github.com/nvim-tree/nvim-web-devicons', -- optional
-  'https://github.com/nvim-tree/nvim-tree.lua',
+  "https://github.com/nvim-tree/nvim-web-devicons", -- optional
+  "https://github.com/nvim-tree/nvim-tree.lua",
 }
 vim.pack.add(plugins, { confirm = false })
 require("nvim-tree").setup({
@@ -170,12 +205,21 @@ vim.pack.add(plugins, { confirm = false })
 -- 3 WHICH-KEY CONFIGURATION
 local wk = require("which-key")
 wk.setup({
-{
+  {
     "folke/which-key.nvim",
     event = "VeryLazy",
+    layout = {
+      width = { min = 20, max = 50 }, -- min and max width of the columns
+      spacing = 3, -- spacing between columns
+      align = "left", -- align columns left, center or right
+    },
+    win = {
+      -- Controls for the actual window container
+      height = { min = 4, max = 25 }, -- min and max height of the window container
+    },
     opts = {
       -- Choose layout preset: "classic", "modern", or "helix"
-      preset = "modern", 
+      preset = "modern",
       -- Your custom groupings go here
       spec = {
         { "<leader>f", group = "Find/File" },
@@ -192,7 +236,7 @@ wk.setup({
         desc = "Buffer Local Keymaps",
       },
     },
-  }
+  },
 })
 
 wk.add({
@@ -209,19 +253,39 @@ vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "Buffers" })
 vim.keymap.set("n", "<leader>ft", nvim_api.tree.toggle, { desc = "Tree View" })
 vim.keymap.set("n", "<leader>vh", ":Telescope help_tags<CR>", { desc = "Fuzzy Help" })
 -- Cycle through colorschemes with live preview
-vim.keymap.set('n', '<leader>fc', '<cmd>Telescope colorscheme enable_preview=true<cr>', { desc = 'Telescope colorschemes with preview' })
+vim.keymap.set(
+  "n",
+  "<leader>fc",
+  "<cmd>Telescope colorscheme enable_preview=true<cr>",
+  { desc = "Telescope colorschemes with preview" }
+)
 -- Quick standard colorscheme picker (no auto-preview)
-vim.keymap.set('n', '<leader>fC', '<cmd>Telescope colorscheme<cr>', { desc = 'Telescope colorschemes' })
+vim.keymap.set("n", "<leader>fC", "<cmd>Telescope colorscheme<cr>", { desc = "Telescope colorschemes" })
 
 -- INFO: better statusline
 ---@diagnostic disable-next-line: redefined-local
 local plugins = {
   "https://github.com/nvim-lualine/lualine.nvim",
   "https://github.com/akinsho/bufferline.nvim",
+  "https://github.com/SmiteshP/nvim-navic",
   "https://github.com/nvim-tree/nvim-web-devicons",
 }
 vim.pack.add(plugins, { confirm = false })
-require("lualine").setup({})
+local navic = require("nvim-navic")
+require("lualine").setup({
+  sections = {
+    lualine_c = {
+      {
+        function()
+          return navic.get_location()
+        end,
+        cond = function()
+          return navic.is_available()
+        end,
+      },
+    },
+  },
+})
 require("bufferline").setup({
   options = {
     close_command = "bdelete! %d", -- Click close icon to delete
@@ -258,10 +322,10 @@ vim.api.nvim_create_autocmd("User", {
 })
 
 -- Tree-sitter (Added languages)
-vim.api.nvim_create_autocmd('FileType', {
+vim.api.nvim_create_autocmd("FileType", {
   callback = function(ev)
     local lang = vim.treesitter.language.get_lang(ev.match)
-    local ts = require('nvim-treesitter')
+    local ts = require("nvim-treesitter")
 
     -- Check if the parser is valid and available via nvim-treesitter
     if vim.tbl_contains(ts.get_available(), lang) then
@@ -280,13 +344,13 @@ vim.api.nvim_create_autocmd('FileType', {
 
 -- Autocmd to check the local buffer working directory
 vim.api.nvim_create_autocmd("BufEnter", {
-    pattern = "*",
-    callback = function()
-        -- Only change directory if it's a normal, readable file on disk
-        if vim.bo.buftype == "" and vim.fn.expand("%:p") ~= "" then
-            vim.cmd(":silent! lcd " .. vim.fn.expand("%:p:h"))
-        end
-    end,
+  pattern = "*",
+  callback = function()
+    -- Only change directory if it's a normal, readable file on disk
+    if vim.bo.buftype == "" and vim.fn.expand("%:p") ~= "" then
+      vim.cmd(":silent! lcd " .. vim.fn.expand("%:p:h"))
+    end
+  end,
 })
 
 -- 5. LSP CONFIGURATION (0.12 Native Style)
@@ -423,10 +487,15 @@ for server, config in pairs(lsp_servers) do
     server,
     mergeTables(config, {
       -- only create the keymaps if the server attaches successfully
-      on_attach = function(_, bufnr)
+      on_attach = function(client, bufnr)
         vim.keymap.set("n", "grd", vim.lsp.buf.definition, { buffer = bufnr, desc = "vim.lsp.buf.definition()" })
 
         vim.keymap.set("n", "grf", vim.lsp.buf.format, { buffer = bufnr, desc = "vim.lsp.buf.format()" })
+        -- Show method name in status bar
+        if client.server_capabilities.documentSymbolProvider then
+          local navic = require("nvim-navic")
+          navic.attach(client, bufnr)
+        end
       end,
     })
   )
@@ -444,18 +513,57 @@ local config_augroup = vim.api.nvim_create_augroup("Config", { clear = true })
 vim.api.nvim_create_autocmd("LspAttach", {
   group = config_augroup,
   callback = function(event)
+    -- Set up LSP keybindings
     local opts = { buffer = event.buf }
     wk.add({
       { "gd", vim.lsp.buf.definition, desc = "Go to Definition", opts },
       { "K", vim.lsp.buf.hover, desc = "Hover Docs", opts },
       { "<leader>lr", vim.lsp.buf.rename, desc = "Rename Symbol", opts },
-      { "<leader>la", vim.lsp.buf.code_action, desc = "Code Action", opts },
+      {
+        "<leader>la",
+        function()
+          vim.lsp.buf.code_action({
+            filter = function(action)
+              return not action.disabled
+            end,
+          })
+        end,
+        desc = "Code Action (Filtered)",
+      },
+      -- { "<leader>la", vim.lsp.buf.code_action, desc = "Code Action", opts },
       { "<leader>ld", vim.lsp.buf.definition, desc = "Go to Definition", opts },
       { "<leader>lR", vim.lsp.buf.references, desc = "Show References", opts },
       { "<leader>lr", vim.lsp.buf.rename, desc = "Rename Symbol", opts },
       { "<leader>lK", vim.lsp.buf.hover, desc = "Hover Docs", opts },
-      { "<leader>lq", function() vim.diagnostic.setqflist() end, desc = "Quickfix List", opts },
+      {
+        "<leader>lq",
+        function()
+          vim.diagnostic.setqflist()
+        end,
+        desc = "Quickfix List",
+        opts,
+      },
     })
+  end,
+})
+
+-- Configure the LSP attach callback for LSP completion
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    local bufnr = args.buf
+
+    -- Set omnifunc to use Neovim's built-in LSP omnifunc handler
+    vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
+
+    -- 2. Map <C-n> to trigger omnicomplete in Insert mode
+    -- This checks if the completion menu is visible; if not, it triggers omnicomplete
+    vim.keymap.set("i", "<C-n>", function()
+      if vim.fn.pumvisible() == 1 then
+        return "<C-n>"
+      else
+        return "<C-x><C-o>"
+      end
+    end, { expr = true, buffer = bufnr, desc = "Trigger LSP omnicomplete" })
   end,
 })
 
@@ -482,7 +590,7 @@ vim.keymap.set("n", "<leader>lD", function()
 end, { desc = "Copy line diagnostics to clipboard" })
 
 -- Workaround for bug https://github.com/neovim/neovim/issues/36257
-vim.api.nvim_create_autocmd('LspAttach', {
+vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
     local client = vim.lsp.get_client_by_id(args.data.client_id)
     if client and client.server_capabilities then
@@ -544,14 +652,14 @@ vim.api.nvim_create_autocmd("DiagnosticChanged", {
 })
 
 -- Add :MessagesBuffer command
-vim.api.nvim_create_user_command('MessagesBuffer', function()
-  vim.cmd('new')
-  vim.bo.buftype = 'nofile'
-  vim.bo.bufhidden = 'hide'
+vim.api.nvim_create_user_command("MessagesBuffer", function()
+  vim.cmd("new")
+  vim.bo.buftype = "nofile"
+  vim.bo.bufhidden = "hide"
   vim.bo.swapfile = false
-  local messages = vim.api.nvim_exec2('messages', { output = true }).output
-  vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(messages, '\n'))
+  local messages = vim.api.nvim_exec2("messages", { output = true }).output
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(messages, "\n"))
 end, {})
 
 -- Setup DAP
-require("init-dap");
+require("init-dap")
