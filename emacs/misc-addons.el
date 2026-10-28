@@ -10,11 +10,15 @@
 
 (use-package nerd-icons-corfu
   :after corfu
+  ;; `always-defer' leaves `:config' unreachable without this: nothing else
+  ;; causes the package to load, so the formatter would never be registered.
+  :demand t
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
 (use-package nerd-icons-completion
   :after marginalia
+  :demand t
   :config
   (nerd-icons-completion-marginalia-setup)
   (nerd-icons-completion-mode 1))
@@ -29,21 +33,19 @@
   ; Indent options:
   ; 'complete: Indents first, then performs completion if pressed again.
   ; t: prioritizes tab over completion
-  (setopt tab-always-indent t) 
-  (setopt tab-first-completion 'word-or-paren-or-punct) ; Emacs 27
+  (setopt tab-always-indent t)
   (setopt indent-tabs-mode nil) ; Use spaces for indentation
   (setopt tab-width 4) ; Display tabs as 4 columns wide
   (setopt standard-indent 4)
 
   ; Completion options
   (setopt enable-recursive-minibuffers t)                ; Use the minibuffer whilst in the minibuffer
-  (setopt completion-cycle-threshold 1)                  ; TAB cycles candidates
+  (setopt completion-cycle-threshold 24)                  ; TAB cycles candidates
   (setopt completions-detailed t)                        ; Show annotations
   (setopt completion-auto-help 'always)                  ; Open completion always; `lazy' another option
   (setopt completions-max-height 20)                     ; This is arbitrary
   (setopt completions-format 'one-column)
   (setopt completions-group t)
-  (setopt completion-auto-select 'second-tab)            ; Much more eager
   (setopt completion-auto-select t)                     ; See `C-h v completion-auto-select' for more possible values
 
   (keymap-set minibuffer-mode-map "TAB" 'minibuffer-complete) ; TAB acts more like how it does in the shell
@@ -78,14 +80,17 @@
 
 (use-package orderless
   :after vertico
+  ;; `orderless' must be loaded for the style to be registered in
+  ;; `completion-styles-alist'; with `always-defer' it would never load and the
+  ;; settings below would never run.
+  :demand t
   :config
   ; completion-styles checks for matches in order. So go from strictest to loosest.
   (setopt
      completion-ignore-case t
      completion-category-defaults nil ;; Disable defaults, use our settings
-     completion-styles '(basic substring)
+     completion-styles '(orderless basic)
      completion-category-overrides '((file (styles basic partial-completion)))
-     ; completion-category-overrides '((eglot (styles . (orderless basic))))
   )
 )
 
@@ -108,20 +113,12 @@
 ;; with LSP via Eglot. You'll likely want to configure this one to
 ;; match your editing preferences, there's no one-size-fits-all
 ;; solution.
-(use-package compat
-  :ensure t
-  :demand t
-  :config
-  ;; Optionally force compatibility with Emacs 31 features
-  (require 'compat))
-
 (use-package corfu
   :ensure t
   ;; Recommended: Enable Corfu globally
   :init
   (global-corfu-mode 1)
   (corfu-popupinfo-mode 1) ; Enables VS Code style documentation hover
-  :hook (after-init . global-corfu-mode)
   ;; Optional customizations
   :custom
   (corfu-auto t)                 ;; Enable auto completion
@@ -140,10 +137,7 @@
   (with-eval-after-load 'savehist
     (corfu-history-mode 1)
     (add-to-list 'savehist-additional-variables 'corfu-history))
-  ;; Integration tweak: If Corfu is active, let it take precedence over the preview overlay
-  (advice-add 'completion-preview-active-mode :before
-              (lambda (&rest _) (when corfu--frame (completion-preview-active-mode -1))))
-  :bind 
+  :bind
   (:map corfu-map
     ([remap keyboard-quit] . corfu-quit)
     ([escape] . corfu-quit)
@@ -165,8 +159,6 @@
   ;; Add global fallbacks (evaluated top to bottom)
   (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  ;; Add these to your global config to replace polluting the LSP list
-  (advice-add 'completion-at-point :around #'cape-wrap-buster)
 
   :config
   ;; Setup for programming modes when Eglot is active
@@ -182,34 +174,14 @@
                   #'cape-keyword
                   #'cape-dabbrev))))
 
-  ;; Automatically trigger the setup whenever Eglot managed buffers initialize
-  ; (add-hook 'eglot-managed-mode-hook #'my-eglot-cape-setup)
-  ;; Hook the merged sources into the programming modes you use
-  :hook ((prog-mode . my/setup-merged-capfs)
-         (text-mode . my/setup-merged-capfs))
+  ;; Run this only in Eglot-managed buffers. Hooking it to `prog-mode' would
+  ;; clobber each mode's own capfs (e.g. `elisp-completion-at-point') and give
+  ;; LSP-free buffers a merged list with no backend in it.
+  :hook (eglot-managed-mode . my/setup-merged-capfs)
   :config
   (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster) ; Get fresh candidates from eglot
   (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible)
-  (advice-add 'dabbrev-capf :around #'cape-wrap-silent) ; Catch errors and silence messages from dabbrev
 )
-
-;; == completion-preview: Inline "ghost text"
-;; This interferes with corfu, so disable for now
-; (use-package completion-preview
-;   :ensure nil ; Use builtin
-;   :custom
-;     ;; Only preview completions that match what you've actually typed
-;     (completion-preview-exact-match-only nil) 
-;     ;; Show the preview after typing a minimum of 2 characters
-;     (completion-preview-minimum-symbol-length 2)
-;   :hook (prog-mode . completion-preview-mode)
-;   :bind
-;   ( :map completion-preview-active-mode-map
-;     ;; Customize keys only when the inline preview is actively showing
-;     ("<up>" . completion-preview-next-candidate)
-;     ("<down>" . completion-preview-prev-candidate)
-;   )
-; )
 
 ;; == Editorconfig
 (use-package editorconfig
@@ -219,12 +191,13 @@
 
 ;; A tree plugin like NerdTree for Vim
 (use-package neotree
-  :custom (neo-theme (if (display-graphic-p) 'nerd-icons 'arrow))
+  :custom (neo-theme (if (or (display-graphic-p) (daemonp)) 'nerd-icons 'arrow))
   :bind (("<f8>"       . #'neotree-toggle))
 )
 
 ;; == which-key
 (use-package which-key
+  :ensure nil ; built in since Emacs 30; installing the MELPA copy shadows it
   :diminish which-key-mode
   :custom
   (which-key-add-column-padding 2)
@@ -259,53 +232,32 @@
   :config
     (save-place-mode)
 )
+;; Save minibuffer history. Needed before `corfu-history' can work: the
+;; savehist block inside the corfu setup waits for this feature.
+(use-package savehist
+  :ensure nil ; builtin
+  :demand t
+  :config
+  (savehist-mode 1))
+
 ;; save recent files
 (use-package recentf
   :ensure nil ; builtin
   :after no-littering
+  :demand t ; otherwise the settings below never run and recentf is never on
   :config
   (setq recentf-save-file (no-littering-expand-var-file-name "recentf")
         recentf-max-saved-items 500
         recentf-max-menu-items 15
         ;; disable recentf-cleanup on Emacs start, because it can cause
         ;; problems with remote files
-        recentf-auto-cleanup 'never))
+        recentf-auto-cleanup 'never)
+  (recentf-mode 1))
 
 ;; Uses OSC 52 escape sequences to sync the clipboard in ssh sessions
 (use-package clipetty
   :ensure t
   :diminish clipetty-mode
   :hook (after-init . global-clipetty-mode))
-
-;; Spelling: Disable for now. Too slow...
-; (use-package ispell
-;   :ensure nil ; builtin
-;   :defer t
-;   :init
-;   ;; Check for programs, set the name, and alert if none are found
-;   (setq ispell-program-name
-;         (cond ((executable-find "enchant-2") "enchant-2")
-;               ((executable-find "hunspell")  "hunspell")
-;               ((executable-find "aspell")    "aspell")
-;               (t (message "Warning: No spelling program found. Flyspell will be disabled.")
-;                  nil)))
-;   :config
-;   ;; Additional configuration if a program was found
-;   (when ispell-program-name
-;     (setq-default ispell-dictionary "en_US")
-;     (when (string= ispell-program-name "hunspell")
-;       (setq-default ispell-really-hunspell t))))
-; 
-; (use-package flyspell
-;   :ensure nil ; builtin
-;   :defer t
-;   :if ispell-program-name
-;   :hook ((text-mode . flyspell-mode)
-;          (prog-mode . flyspell-prog-mode)))
-; 
-; (use-package flyspell-correct
-;   :defer t
-;   :after flyspell
-;   :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
 
 (provide 'misc-addons)

@@ -5,9 +5,16 @@
 ;; ====================================
 
 
+(use-package add-node-modules-path
+  :ensure t
+  :hook ((js-ts-mode . add-node-modules-path)
+         (typescript-ts-mode . add-node-modules-path)
+         (tsx-ts-mode . add-node-modules-path)))
+
+;; Built in; `csharp-ts-mode' lives in csharp-mode.el (no feature of its own).
 (use-package csharp-mode
-  :hook ((csharp-mode csharp-ts-mode) . eglot-ensure)
-)
+  :ensure nil
+  :hook (csharp-ts-mode . eglot-ensure))
 
 (use-package fsharp-mode
   :hook ((fsharp-mode fsharp-ts-mode) . eglot-ensure)
@@ -35,15 +42,42 @@
     ;              (add-hook 'completion-at-point-functions #'my/filter-fsharp-completions nil t))))
 )
 
-(use-package go-mode
-  :bind (:map go-mode-map
-          ("C-c C-f" . 'gofmt))
-  :hook ((go-mode go-ts-mode) . eglot-ensure)
-  :hook (before-save . gofmt-before-save))
+(use-package go-ts-mode
+  :ensure nil
+  :preface
+  (defun my/eglot-format-before-save ()
+    "Format the buffer with Eglot on save, if Eglot is managing it."
+    (when (eglot-managed-p)
+      (eglot-format-buffer)))
+  (defun my/go-ts-mode-setup ()
+    (add-hook 'before-save-hook #'my/eglot-format-before-save nil t))
+  :bind (:map go-ts-mode-map
+          ("C-c C-f" . eglot-format-buffer))
+  :hook ((go-ts-mode . eglot-ensure)
+         (go-ts-mode . my/go-ts-mode-setup)))
 
-(use-package json-mode)
+(use-package js
+  :ensure nil
+  ;; Route both .js .cjs .mjs files into js-ts-mode
+  :mode ("\\.[cm]?js\\'" . js-ts-mode)
+  :hook (js-ts-mode . eglot-ensure)
+  :custom
+  (js-indent-level 2))
 
-(use-package lua-mode)
+(use-package jtsx
+  :ensure t
+  ;; jtsx owns .jsx/.tsx (jtsx-tsx-mode derives from tsx-ts-mode, so the
+  ;; tsx-ts-mode hooks below still apply)
+  :mode (("\\.jsx\\'" . jtsx-jsx-mode)
+         ("\\.tsx\\'" . jtsx-tsx-mode))
+  :hook ((jtsx-jsx-mode . eglot-ensure)
+         (jtsx-tsx-mode . eglot-ensure))
+  :config
+  ;; Gives you intelligent JSX electric tags, element jumping, and comment nesting
+  (setq jtsx-switch-indent-offset 2))
+
+;; json and lua use the built-in json-ts-mode / lua-ts-mode, which
+;; `treesit-auto' maps to .json / .lua (see TreeSitter setup below).
 
 (use-package markdown-mode
   ;; These extra modes help clean up the Markdown editing experience.
@@ -59,43 +93,56 @@
 
 (use-package python
   :custom
-    (python-flymake-command '("ruff"))
-  :hook ((python-mode python-ts-mode) . eglot-ensure)
+    (python-flymake-command '("ruff" "check" "--quiet" "--output-format=concise"
+                              "--stdin-filename=stdin" "-"))
+  :hook (python-ts-mode . eglot-ensure)
 )
 
+;; The `rust-mode' package is kept only for its cargo/rustfmt commands (and
+;; prettify alist); the major mode is the built-in `rust-ts-mode'.
 (use-package rust-mode
-  :bind (:map rust-mode-map
-          ("C-c C-r" . 'rust-run)
-          ("C-c C-c" . 'rust-compile)
-          ("C-c C-f" . 'rust-format-buffer)
-          ("C-c C-t" . 'rust-test))
-  :hook (rust-mode . prettify-symbols-mode)
-  :hook ((rust-mode rust-ts-mode) . eglot-ensure)
-)
+  :commands (rust-run rust-compile rust-test rust-format-buffer))
 
-(use-package web-mode
-  :mode ("\\.ts\\'" "\\.js\\'" "\\.mjs\\'" "\\.tsx\\'" "\\.jsx\\'")
+(use-package rust-ts-mode
+  :ensure nil
+  :preface
+  (defun my/rust-ts-mode-setup ()
+    "Enable `prettify-symbols-mode' with rust-mode's symbol table."
+    (require 'rust-mode)
+    (setq-local prettify-symbols-alist rust-prettify-symbols-alist
+                prettify-symbols-compose-predicate #'rust--prettify-symbols-compose-p)
+    (prettify-symbols-mode 1))
+  :bind (:map rust-ts-mode-map
+          ("C-c C-r" . rust-run)
+          ("C-c C-c" . rust-compile)
+          ("C-c C-f" . rust-format-buffer)
+          ("C-c C-t" . rust-test))
+  :hook ((rust-ts-mode . eglot-ensure)
+         (rust-ts-mode . my/rust-ts-mode-setup)))
+
+;; `tsx-ts-mode' is defined in typescript-ts-mode.el (no feature of its own).
+;; .tsx files are handled by jtsx above, which derives from `tsx-ts-mode'.
+(use-package typescript-ts-mode
+  :ensure nil
+  :mode ("\\.[cm]?ts\\'" . typescript-ts-mode)
+  :hook ((typescript-ts-mode tsx-ts-mode) . eglot-ensure)
   :custom
-    (web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
-    (web-mode-code-indent-offset 2)
-    (web-mode-css-indent-offset 2)
-    (web-mode-markup-indent-offset 2)
-    (web-mode-enable-auto-quoting nil)
-  :hook ((web-mode web-ts-mode) . eglot-ensure)
-)
+  (typescript-ts-mode-indent-offset 2))
 
-(use-package yaml-mode
+;; .yml/.yaml are mapped by `treesit-auto'; these are the extra file names.
+(use-package yaml-ts-mode
+  :ensure nil
   :mode ( "\\.clang-format\\'" "\\.clang-tidy\\'" "\\.clangd\\'")
 )
-
 
 ;; ====================================
 ;; TreeSitter setup
 ;; ====================================
-(defun my-ignore-treesit-indent-error (args)
-  "Ignore treesit node errors during indentation."
+(defun my-ignore-treesit-indent-error (orig &rest args)
+  "Ignore treesit node errors during indentation.
+Around-advice: call ORIG with ARGS, swallowing `wrong-type-argument'."
   (condition-case nil
-      (apply args)
+      (apply orig args)
     (wrong-type-argument nil)))
 ;; Apply to the culprit function, often:
 (advice-add 'treesit-indent-region :around #'my-ignore-treesit-indent-error)
@@ -104,11 +151,20 @@
 (use-package treesit-auto
   :ensure t
   :vc (:url "https://github.com/renzmann/treesit-auto.git")
+  ;; Needed at startup: `use-package-always-defer' would otherwise never load it,
+  ;; and the legacy-mode -> ts-mode remaps (go, python, rust, ...) would be inactive.
+  :demand t
   :custom
     (treesit-auto-install t) ; Can be t or 'prompt
   :config
     (treesit-auto-add-to-auto-mode-alist 'all)
-    (global-treesit-auto-mode))
+    (global-treesit-auto-mode)
+    ;; treesit-auto maps .tsx to `tsx-ts-mode' and sits ahead of jtsx's
+    ;; entries; put jtsx back in front.
+    ;; (`add-to-list' alone is a no-op when the entry already exists further down.)
+    (dolist (entry '(("\\.jsx\\'" . jtsx-jsx-mode)
+                     ("\\.tsx\\'" . jtsx-tsx-mode)))
+      (setq auto-mode-alist (cons entry (delete entry auto-mode-alist)))))
 
 ;; ====================================
 ;; OTHER HIGHLIGHTING
@@ -121,15 +177,15 @@
 ;; TODO Hightlight (Comment-tags)
 ;; ====================================
 (use-package hl-todo
-  :config
-    (setq hl-todo-highlight-punctuation ":"
-          hl-todo-keyword-faces
-          `(("TODO"       warning bold)
-            ("FIXME"      error bold)
-            ("HACK"       font-lock-constant-face bold)
-            ("REVIEW"     font-lock-keyword-face bold)
-            ("NOTE"       success bold)
-            ("DEPRECATED" font-lock-doc-face bold)))
+  :custom
+    (hl-todo-highlight-punctuation ":")
+    (hl-todo-keyword-faces
+      '(("TODO"       warning bold)
+        ("FIXME"      error bold)
+        ("HACK"       font-lock-constant-face bold)
+        ("REVIEW"     font-lock-keyword-face bold)
+        ("NOTE"       success bold)
+        ("DEPRECATED" font-lock-doc-face bold)))
   :hook
     ((prog-mode text-mode) . hl-todo-mode)
 )
@@ -164,7 +220,9 @@
 ;; Flymake is used automatically by Eglot, no extra config typically needed
 (use-package flymake
   :ensure nil ; Use the built-in version
-  :defer t) ; Defer loading, as Eglot handles its activation
+  :defer t ; Defer loading, as Eglot handles its activation
+  :custom
+    (flymake-no-changes-timeout 5))
 
 ;; Eldoc is also used automatically, minimal config required
 (use-package eldoc
@@ -179,7 +237,8 @@
 (use-package flymake
   :ensure nil ; builtin
   :defer t; defer loading
-  :if (display-graphic-p)
+  ;; `display-graphic-p' is nil at load time in a daemon, so also accept that
+  :if (or (display-graphic-p) (daemonp))
   :config
     ;; magic to set the margin string
     (put 'flymake-error 'flymake-margin-string (alist-get 'error flymake-margin-indicators-string))
@@ -187,7 +246,6 @@
     (put 'flymake-note 'flymake-margin-string (alist-get 'note flymake-margin-indicators-string))
     ;; wider margins
     (setq-default left-margin-width 3 right-margin-width 0)
-    (setq left-margin-width 3 right-margin-width 0)
   :custom
     (flymake-indicator-type 'margins)
     (flymake-autoresize-margins t)
@@ -210,6 +268,12 @@
     )
 )
 
+;; Hook in eslint
+(use-package flymake-eslint
+  :ensure t
+  :hook ((typescript-ts-mode . flymake-eslint-enable)
+         (tsx-ts-mode . flymake-eslint-enable)))
+
 ;; ====================================
 ;; Eldoc customization
 ;; ====================================
@@ -217,7 +281,6 @@
   :defer t
   :diminish t
   :config
-    (eldoc--format-doc-buffer nil) ; programmatically creates an eldoc buffer.
     ;; Automatically update the *eldoc* buffer if it's already visible
     (setq eldoc-echo-area-prefer-doc-buffer t)
     ;; Keep the message area brief
@@ -250,9 +313,9 @@
           (with-current-buffer buf
             (let ((inhibit-read-only t) (regexp "<a href='\\([^']+\\)'>"))
               (save-excursion
-                ;; 0. Make font slightly smaller
-                (goto-char (point-min))
-                (face-remap-add-relative 'default :height 0.75)
+                ;; 0. Make font slightly smaller. Set (not add) the remap, so
+                ;; repeated refreshes don't compound the shrinking.
+                (setq-local face-remapping-alist '((default (:height 0.75))))
                 ;; 1. Remove ^M (carriage return) characters
                 (goto-char (point-min))
                 (while (search-forward "\r" nil t)
@@ -314,15 +377,13 @@
         )
   :custom
     (eglot-extend-to-xref t)     ; activate Eglot in referenced non-project files
-    (eglot-events-buffer-size 0) ; disable events logging, it should be enabled only when debugging LSP servers
-    (eglot-sync-connect-nil 0)   ; disable UI freeze when opening big files
+    (eglot-events-buffer-config '(:size 0 :format full)) ; disable events logging, it should be enabled only when debugging LSP servers
+    (eglot-sync-connect nil)     ; connect asynchronously: no UI freeze when opening big files
     (eglot-connect-timeout nil)  ; never timeout
     (eglot-autoshutdown t)       ; Kill LSP server when closing last file buffer
     (eglot-send-changes-idle-time 0.1) ; Faster updates
-    (flymake-no-changes-timeout 5)
-    ;; Speeds up rendering
-    (setq eglot-prefer-plaintext t)
-    (setq eglot-ignored-server-capabilities
+    (eglot-prefer-plaintext t)   ; speeds up rendering
+    (eglot-ignored-server-capabilities
       ;; the things we actually want are commented here. Weird way to do it, but ok.
       '(
         ;:hoverProvider ;(provides async type info, would like this to be manual)
@@ -336,24 +397,22 @@
         :documentHighlightProvider
         :documentSymbolProvider
         :workspaceSymbolProvider
-        :codeActionProvider ; (quickfix is useful, e.g. import type at point)
+        ;:codeActionProvider ; (quickfix is useful, e.g. import type at point; bound to C-c . / C-c l a)
         :codeLensProvider
-        :documentFormattingProvider
-        :documentRangeFormattingProvider
+        ;:documentFormattingProvider ; (bound to C-c l f)
+        ;:documentRangeFormattingProvider
         :documentOnTypeFormattingProvider
         ;:renameProvider
         ;:documentLinkProvider
         :colorProvider
         :foldingRangeProvider
-        :executeCommandProvider
-        :inlayHintProvider
+        ;:executeCommandProvider ; (code actions often run server commands)
+        ;:inlayHintProvider ; (off by default via hook below; toggle with C-c l h)
        )
     )
 
   :config
-    (fset #'jsonrpc--log-event #'ignore)  ; massive perf boost---don't log every event
     (setq eglot-report-progress nil)  ; makes modeline flash less
-    (add-to-list 'eglot-stay-out-of 'flymake)  ; Prevent conflict
   :hook
     ;; A bit intrusive
     (eglot-managed-mode . (lambda () (eglot-inlay-hints-mode -1)))
@@ -387,10 +446,10 @@
         )
       )
     ))
-    (add-to-list 'eglot-server-programs '((go-mode  go-ts-mode) . ("gopls" )))
-    ; (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("ruff" "server" "--preview")))
-    (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("ty" "server")))
-    (add-to-list 'eglot-server-programs '((rust-ts-mode rust-mode) .
+    (add-to-list 'eglot-server-programs '(go-ts-mode . ("gopls" )))
+    ; (add-to-list 'eglot-server-programs '(python-ts-mode . ("ruff" "server" "--preview")))
+    (add-to-list 'eglot-server-programs '(python-ts-mode . ("ty" "server")))
+    (add-to-list 'eglot-server-programs '(rust-ts-mode .
        ("rust-analyzer"
         :initializationOptions (
           :check (:command "clippy")
@@ -399,6 +458,7 @@
         )
       )
     ))
+    (add-to-list 'eglot-server-programs '((js-ts-mode typescript-ts-mode) . ("typescript-language-server" "--stdio")))
 )
 
 ;; ====================================
@@ -406,49 +466,47 @@
 ;; ====================================
 (use-package emacs
   :init
-  ;; Increase the number of available slots per side (default is 2)
-  (setq window-sides-slots '(1 1 1 1)) ; (left top right bottom)
+  ;; Max number of side windows per side (nil = unbounded). Bottom needs 2 for
+  ;; compilation (slot -1) and eldoc/flymake (slot 1) to coexist.
+  (setq window-sides-slots '(1 1 1 2)) ; (left top right bottom)
   :config
-  (setq display-buffer-alist
-        `(;; 1. Help buffers on the RIGHT sidebar
-          ("\\*\\(Help\\|which-key\\)\\*"
-           (display-buffer-in-side-window)
-           (side . right)
-           (slot . 0)
-           (window-width . 0.3)
-           (display-buffer-reuse-window display-buffer-pop-up-window)
-           (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t))))
+  ;; add-to-list (rather than setq) keeps entries defined elsewhere, and is
+  ;; idempotent if this file is reloaded.
+  (dolist (entry
+           '(;; 1. Help buffers on the RIGHT sidebar
+             ("\\*\\(Help\\|which-key\\)\\*"
+              (display-buffer-reuse-window display-buffer-in-side-window)
+              (side . right)
+              (slot . 0)
+              (window-width . 0.3)
+              (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t))))
 
-          ;; 2. Compilation/Shells at the BOTTOM-LEFT (Slot -1)
-          ("\\*\\(compilation\\|shell\\|vterm\\)\\*"
-           (display-buffer-in-side-window)
-           (side . bottom)
-           (slot . -1)
-           (window-height . 0.25)
-           (display-buffer-reuse-window display-buffer-pop-up-window)
-           (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t))))
+             ;; 2. Compilation/Shells at the BOTTOM-LEFT (Slot -1)
+             ("\\*\\(compilation\\|shell\\|vterm\\)\\*"
+              (display-buffer-reuse-window display-buffer-in-side-window)
+              (side . bottom)
+              (slot . -1)
+              (window-height . 0.25)
+              (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t))))
 
-          ;; 3. ElDoc at the BOTTOM-RIGHT (Slot 1)
-          ("\\*eldoc\\*"
-           (display-buffer-in-side-window) ; Use a fixed window
-           ; (display-buffer-at-bottom) ; Use a standard bottom window so ^X-1 closes it
-           (side . bottom)
-           (slot . 1)
-           (window-height . 0.25)
-           (display-buffer-reuse-window display-buffer-pop-up-window)
-           (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t))))
+             ;; 3. ElDoc at the BOTTOM-RIGHT (Slot 1)
+             ("\\*eldoc\\*"
+              (display-buffer-reuse-window display-buffer-in-side-window) ; Use a fixed window
+              ; (display-buffer-at-bottom) ; Use a standard bottom window so ^X-1 closes it
+              (side . bottom)
+              (slot . 1)
+              (window-height . 0.25)
+              (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t))))
 
-          ;; 4. Flymake at the BOTTOM-RIGHT (Slot 1)
-          ("\\*Flymake diagnostics"
-           (display-buffer-in-side-window) ; Use a fixed window
-           ; (display-buffer-at-bottom) ; Use a standard bottom window so ^X-1 closes it
-           (side . bottom)
-           (slot . 1)
-           (window-height . 0.25)
-           (display-buffer-reuse-window display-buffer-pop-up-window)
-           (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t)))
-          )
-)))
+             ;; 4. Flymake at the BOTTOM-RIGHT (Slot 1, shared with ElDoc)
+             ("\\*Flymake diagnostics"
+              (display-buffer-reuse-window display-buffer-in-side-window) ; Use a fixed window
+              ; (display-buffer-at-bottom) ; Use a standard bottom window so ^X-1 closes it
+              (side . bottom)
+              (slot . 1)
+              (window-height . 0.25)
+              (window-parameters . ((window-size-fixed . nil) (no-delete-other-windows . t))))))
+    (add-to-list 'display-buffer-alist entry)))
 
 ;; ====================================
 ;; Project (Eglot helper)

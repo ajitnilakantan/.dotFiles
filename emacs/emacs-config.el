@@ -15,7 +15,11 @@
   ((prog-mode text-mode conf-mode help-mode) . visual-wrap-prefix-mode)
   ((prog-mode text-mode conf-mode) . display-line-numbers-mode)
   :custom
+  ;; Raise all three limits together: `undo-strong-limit' would otherwise cap
+  ;; the history well below `undo-limit'.
   (undo-limit 80000000) ;; ⚠️👀
+  (undo-strong-limit 120000000)
+  (undo-outer-limit 180000000)
 
   ; (show-paren-when-point-inside-paren t)
 
@@ -23,18 +27,15 @@
   (cursor-type 'bar)
   (context-menu-mode t)
 
-  ;; Exit message
-  (confirm-kill-emacs nil)
-
   ;; Disable Welcome Screen
   (inhibit-startup-screen t)
 
   ;; Seems to improve performancs
   (inhibit-compacting-font-caches t)
 
-  ;; defer fontification while there is input pending -- this keeps
-  ;; typing responsive in large/complex buffers where font-lock is slow
-  (setq redisplay-skip-fontification-on-input t)
+  ;; Defer fontification while there is input pending -- this keeps typing
+  ;; responsive in large/complex buffers where font-lock is slow.
+  (redisplay-skip-fontification-on-input t)
 
   ;; Hide cursor in not focus windows
   (cursor-in-non-selected-windows nil)
@@ -43,7 +44,6 @@
   (pixel-scroll-precision-mode t)
   (pixel-scroll-precision-interpolate-page t)
   (scroll-conservatively 101) ;; must be greater than or equal to 101
-  (scroll-step 1)
 
   ;; Backups
   (backup-by-copying t)      ; Don't deling hardlinks
@@ -54,12 +54,12 @@
   (create-lockfiles nil) ; Disable lock files
 
   :config
-  ;; Alias
-  (defalias 'yes-or-no-p 'y-or-n-p)
+  ;; Answer "y"/"n" instead of "yes"/"no"
+  (setopt use-short-answers t)
 
-  ;; Menu-bar
+  ;; Menu-bar (early-init.el no longer hides it, so this just makes sure it
+  ;; shows on graphical frames)
   (menu-bar-mode t)
-  (if (window-system) (progn (menu-bar-mode t) (scroll-bar-mode t)))
 
   ;; Configurations for Windows
   (if (eq system-type 'windows-nt)
@@ -77,7 +77,9 @@
     (set-selection-coding-system 'utf-8))
 
   ; set up unicode symbols (order matters!)
-  (if (display-graphic-p)
+  ;; `daemonp' too: under `emacs --daemon' there is no selected frame yet, so
+  ;; the frames created later would otherwise miss these fontsets.
+  (if (or (display-graphic-p) (daemonp))
     (progn
       (set-fontset-font
        t
@@ -108,18 +110,6 @@
   ;  "Ensure the mark remains active after copying."
   ;  (setq deactivate-mark nil))
 
-  ;; Remember positions
-  (if (window-system)
-    (progn
-      (setq desktop-buffers-not-to-save ".*") ; regex - all files
-      (setq desktop-files-not-to-save ".*") ; regex - all files
-      (setq desktop-restore-frames t)
-      (setq desktop-restore-in-current-display t)
-      (setq desktop-restore-forces-onscreen nil)
-      ;(desktop-save-mode 1)
-      ;(setq desktop-save t)
-    ))
-
   ;; wider margins
   (setq-default left-margin-width 3 right-margin-width 0)
   (setq left-margin-width 3 right-margin-width 0)
@@ -132,8 +122,7 @@
 
 
   ;; integrate copy/paste with X
-  (setq select-enable-clipboard t
-        select-enable-primary t
+  (setq select-enable-primary t
         save-interprogram-paste-before-kill t)
 
   ;; Tab-bar-mode
