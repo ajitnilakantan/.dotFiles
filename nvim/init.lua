@@ -471,7 +471,13 @@ local lsp_servers = {
   rust_analyzer = {}, -- rust
   ts_ls = {}, -- typescript
   tsc = {}, -- typescript
-  ty = {}, -- python
+  ty = { -- python
+      init_options = {
+          experimental = {
+              useUv = 'scripts', -- automatically handle PEP 723
+          }
+      },
+  }, -- python
 }
 require("mason").setup()
 require("mason-lspconfig").setup()

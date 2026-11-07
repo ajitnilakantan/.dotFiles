@@ -86,6 +86,42 @@ function gitdiff() {
 function camera_usage() {
     lsof | grep -i 'AppleCamera|iSight|VDC';
 }
+
+function rga-fzf() {
+  local search_cmd
+  local rg_prefix
+
+  if command -v rga >/dev/null 2>&1; then
+    search_cmd="rga"
+    rg_prefix="rga --files-with-matches"
+  elif command -v rg >/dev/null 2>&1; then
+    search_cmd="rg"
+    rg_prefix="rg --files-with-matches"
+  else
+    echo "Error: Neither 'rga' nor 'rg' was found in your PATH." >&2
+    return 1
+  fi
+
+  # Binding 'start:reload' ensures the initial positional argument runs right away
+  local file
+  file="$(
+    FZF_DEFAULT_COMMAND="$rg_prefix '$1'" \
+    fzf --sort \
+        --phony \
+        -q "$1" \
+        --ansi \
+        --preview="[[ ! -z {} ]] && $search_cmd --pretty --context 5 {q} {}" \
+        --bind "start:reload:$rg_prefix {q} || :" \
+        --bind "change:reload:$rg_prefix {q} || :" \
+        --preview-window="70%:wrap"
+  )"
+  
+  if [[ -n "$file" ]]; then
+    echo "'$file'"
+  fi
+}
+
+
 function frg {
     # See https://news.ycombinator.com/item?id=38471822
     result=$(rg --ignore-case --color=always --line-number --no-heading "$@" |

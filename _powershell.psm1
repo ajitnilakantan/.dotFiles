@@ -120,6 +120,46 @@ function ssh-copy-id($server) {
     type $env:USERPROFILE\.ssh\id_rsa.pub | ssh $server "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 }
 
+function rga-fzf {
+    param([string]$query = "")
+    
+    if (Get-Command rga -ErrorAction SilentlyContinue) {
+        $search_cmd = "rga"
+        $rg_prefix  = "rga --line-number --no-heading"
+    } elseif (Get-Command rg -ErrorAction SilentlyContinue) {
+        $search_cmd = "rg"
+        $rg_prefix  = "rg --line-number --no-heading"
+    } else {
+        Write-Error "Neither 'rga' nor 'rg' was found in your PATH."
+        return
+    }
+    
+    $env:FZF_DEFAULT_COMMAND = "$rg_prefix '$query'"
+    $has_bat = [bool](Get-Command bat -ErrorAction SilentlyContinue)
+    
+    # We use escaped double quotes for cross-platform compatibility inside fzf
+    if ($has_bat) {
+        $preview_cmd = "if ('{1}' -match '\.pdf$') { $search_cmd --pretty --context 5 {q} {1} } else { bat --style=numbers --color=always --highlight-line {2} {1} }"
+    } else {
+        $preview_cmd = "$search_cmd --pretty --context 5 {q} {1}"
+    }
+    
+    # 'default:shell=powershell' forces fzf's background terminal worker out of cmd.exe
+    $selected = fzf --sort `
+        --phony `
+        -q "$query" `
+        --ansi `
+        --delimiter ":" `
+        --preview="$preview_cmd" `
+        --preview-window="default:+{2}/2:70%:wrap" `
+        --bind "start:reload:$rg_prefix {q} || echo ." `
+        --bind "change:reload:$rg_prefix {q} || echo ."
+        
+    if ($selected) {
+        $file = ($selected -split ":")[0]
+        Start-Process $file
+    }
+}
 function frg {
     # See: https://news.ycombinator.com/item?id=38471822
     # Usage: frg "searchpattern"
